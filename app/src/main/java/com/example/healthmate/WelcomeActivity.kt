@@ -1,31 +1,22 @@
 package com.example.healthmate
+
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,6 +36,9 @@ class WelcomeActivity : ComponentActivity() {
 
 @Composable
 fun WelcomeBody() {
+
+    // ✅ Context for navigation
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -86,16 +80,13 @@ fun WelcomeBody() {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // App Icon or Logo (Optional - add if you have one)
+
                 Image(
-                    painter = painterResource(id = R.drawable.logo), // Add your logo
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Health Mate Logo",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .padding(bottom = 16.dp)
+                    modifier = Modifier.size(100.dp)
                 )
 
-                // Title
                 Text(
                     text = "Welcome to Health Mate!",
                     fontSize = 32.sp,
@@ -104,9 +95,6 @@ fun WelcomeBody() {
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Subtitle
                 Text(
                     text = "Your Health Companion",
                     fontSize = 16.sp,
@@ -117,10 +105,11 @@ fun WelcomeBody() {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Login Button
+                // ✅ Login Button
                 Button(
                     onClick = {
-
+                        val intent = Intent(context, LoginActivity::class.java)
+                        context.startActivity(intent)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -128,10 +117,6 @@ fun WelcomeBody() {
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF2563EB)
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 4.dp,
-                        pressedElevation = 8.dp
                     )
                 ) {
                     Text(
@@ -142,10 +127,11 @@ fun WelcomeBody() {
                     )
                 }
 
-                // Sign Up Button
+                // ✅ Sign Up Button
                 Button(
                     onClick = {
-
+                        val intent = Intent(context, SignupActivity::class.java)
+                        context.startActivity(intent)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -153,10 +139,6 @@ fun WelcomeBody() {
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF22C55E)
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 4.dp,
-                        pressedElevation = 8.dp
                     )
                 ) {
                     Text(
@@ -167,9 +149,6 @@ fun WelcomeBody() {
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Footer text (Optional)
                 Text(
                     text = "Manage your health with ease",
                     fontSize = 14.sp,

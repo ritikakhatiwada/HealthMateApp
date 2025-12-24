@@ -12,6 +12,28 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HealthMate">
         <activity
+            android:name=".AdminDashBoardActivity"
+            android:exported="true"
+            android:label="@string/title_activity_admin_dash_board"
+            android:theme="@style/Theme.HealthMate">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".UserDashBoardActivity"
+            android:exported="true"
+            android:label="@string/title_activity_user_dash_board"
+            android:theme="@style/Theme.HealthMate">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".SplashActivity"
             android:exported="true"
             android:label="@string/title_activity_splash"
