@@ -11,4 +11,6 @@
     <string name="title_activity_symptom_analyzer">SymptomAnalyzerActivity</string>
     <string name="title_activity_medical_history">MedicalHistoryActivity</string>
     <string name="title_activity_home">HomeActivity</string>
+    <string name="title_activity_forget_password">ForgetPasswordActivity</string>
+    <string name="title_activity_reset_password">ResetPasswordActivity</string>
 </resources>
