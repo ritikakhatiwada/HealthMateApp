@@ -16,4 +16,14 @@
     <string name="title_activity_splash">SplashActivity</string>
     <string name="title_activity_user_dash_board">UserDashBoardActivity</string>
     <string name="title_activity_admin_dash_board">AdminDashBoardActivity</string>
+    <string name="title_activity_chatbot">ChatbotActivity</string>
+    <string name="ai_health_assistant">AI Health Assistant</string>
+    <string name="always_here_to_help">Always here to help</string>
+    <string name="type_your_health_question">Type your health question…</string>
+    <string name="quick_questions">Quick questions:</string>
+    <string name="symptoms_of_flu">What are symptoms of flu?</string>
+    <string name="reduce_fever">How to reduce fever?</string>
+    <string name="when_see_doctor">When should I see a doctor?</string>
+    <string name="tips_better_sleep">Tips for better sleep</string>
+    <string name="welcome_message">Hello! I\'m your AI Health Assistant. I\'m here to answer your health questions and provide general medical guidance. How can I help you today?</string>
 </resources>
