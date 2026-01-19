@@ -1,7 +1,9 @@
 package com.example.healthmate
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -43,9 +45,10 @@ fun LoginBody() {
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // ✅ Get context for Intent
     val context = LocalContext.current
+    val activity = context as Activity
 
     Scaffold { padding ->
 
@@ -82,9 +85,22 @@ fun LoginBody() {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Show error message if any
+                errorMessage?.let { error ->
+                    Text(
+                        text = error,
+                        color = Color.Red,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = { 
+                        email = it 
+                        errorMessage = null
+                    },
                     label = { Text("Email") },
                     placeholder = { Text("Enter your email") },
                     keyboardOptions = KeyboardOptions(
@@ -99,7 +115,10 @@ fun LoginBody() {
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = { 
+                        password = it 
+                        errorMessage = null
+                    },
                     label = { Text("Password") },
                     placeholder = { Text("Enter your password") },
                     visualTransformation =
@@ -164,7 +183,28 @@ fun LoginBody() {
 
                 Button(
                     onClick = {
-                        // TODO: Login logic
+                        // Validate credentials
+                        val role = AuthConstants.validateCredentials(email.trim(), password)
+                        
+                        when (role) {
+                            "user" -> {
+                                Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+                                val intent = Intent(context, UserDashBoardActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                context.startActivity(intent)
+                                activity.finish()
+                            }
+                            "admin" -> {
+                                Toast.makeText(context, "Admin login successful!", Toast.LENGTH_SHORT).show()
+                                val intent = Intent(context, AdminDashBoardActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                context.startActivity(intent)
+                                activity.finish()
+                            }
+                            else -> {
+                                errorMessage = "Invalid email or password"
+                            }
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -192,6 +232,19 @@ fun LoginBody() {
                             Intent(context, SignupActivity::class.java)
                         context.startActivity(intent)
                     }
+                )
+                
+                // Test credentials hint
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Test: user@test.com / user123",
+                    fontSize = 11.sp,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "Admin: admin@test.com / admin123",
+                    fontSize = 11.sp,
+                    color = Color.Gray
                 )
             }
         }

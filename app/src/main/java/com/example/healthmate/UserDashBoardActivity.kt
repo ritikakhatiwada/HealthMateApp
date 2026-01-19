@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.*
@@ -71,7 +72,7 @@ fun UserDashboardScreen() {
                 shape = CircleShape
             ) {
                 Icon(
-                    imageVector = Icons.Default.Chat,
+                    imageVector = Icons.Filled.Chat,
                     contentDescription = "Open AI Health Assistant",
                     tint = Color.White
                 )
@@ -160,7 +161,7 @@ fun UserDashboardScreen() {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Chat,
+                            imageVector = Icons.Filled.Chat,
                             contentDescription = null,
                             tint = Purple40,
                             modifier = Modifier.size(32.dp)
