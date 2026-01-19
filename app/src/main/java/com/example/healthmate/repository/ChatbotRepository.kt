@@ -35,7 +35,7 @@ class ChatbotRepository {
 
     private val generativeModel: GenerativeModel by lazy {
         GenerativeModel(
-            modelName = "gemini-pro",
+            modelName = "gemini-2.0-flash",
             apiKey = BuildConfig.GEMINI_API_KEY
         )
     }
@@ -85,7 +85,7 @@ class ChatbotRepository {
             )
 
             // Generate response
-            val response = generativeModel.generateContent(conversationContext)
+            val response = generativeModel.generateContent(*conversationContext.toTypedArray())
             val aiResponse = response.text 
                 ?: "I'm sorry, I couldn't generate a response. Please try again."
 

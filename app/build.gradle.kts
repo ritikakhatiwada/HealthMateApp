@@ -4,6 +4,22 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+
+import java.util.Properties
+import java.io.FileInputStream
+
+// Load local.properties for API key
+val localPropertiesFile = rootProject.file("local.properties")
+val apiKey = if (localPropertiesFile.exists()) {
+    val localProperties = Properties()
+    localProperties.load(FileInputStream(localPropertiesFile))
+    localProperties.getProperty("GEMINI_API_KEY") 
+        ?: "AIzaSyAzpCosYSFJbODADaO297SI7reAClX-yjU"
+} else {
+    "AIzaSyAzpCosYSFJbODADaO297SI7reAClX-yjU"
+}
+
+
 android {
     namespace = "com.example.healthmate"
     compileSdk {
@@ -30,16 +46,7 @@ android {
         //
         // Current API key: AIzaSyAzpCosYSFJbODADaO297SI7reAClX-yjU
         
-        // Load local.properties for API key
-        val localPropertiesFile = rootProject.file("local.properties")
-        val apiKey = if (localPropertiesFile.exists()) {
-            val localProperties = java.util.Properties()
-            localProperties.load(java.io.FileInputStream(localPropertiesFile))
-            localProperties.getProperty("GEMINI_API_KEY") 
-                ?: "AIzaSyAzpCosYSFJbODADaO297SI7reAClX-yjU"
-        } else {
-            "AIzaSyAzpCosYSFJbODADaO297SI7reAClX-yjU"
-        }
+
         buildConfigField("String", "GEMINI_API_KEY", "\"$apiKey\"")
     }
 
@@ -78,6 +85,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.google.generativeai)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

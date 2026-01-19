@@ -1,21 +1,19 @@
 package com.example.healthmate
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,8 +35,6 @@ class AdminDashBoardActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboardScreen() {
-    val context = LocalContext.current
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -53,25 +49,6 @@ fun AdminDashboardScreen() {
                     containerColor = Purple40
                 )
             )
-        },
-        floatingActionButton = {
-            // Chatbot FAB at bottom right
-            FloatingActionButton(
-                onClick = {
-                    val intent = Intent(context, ChatbotActivity::class.java)
-                    context.startActivity(intent)
-                },
-                modifier = Modifier
-                    .padding(16.dp),
-                containerColor = Purple40,
-                shape = CircleShape
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Chat,
-                    contentDescription = "Open AI Health Assistant",
-                    tint = Color.White
-                )
-            }
         }
     ) { paddingValues ->
         Box(
@@ -140,7 +117,7 @@ fun AdminDashboardScreen() {
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Info card about chatbot
+                // Admin info card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -156,19 +133,19 @@ fun AdminDashboardScreen() {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Chat,
+                            imageVector = Icons.Filled.Settings,
                             contentDescription = null,
                             tint = Purple40,
                             modifier = Modifier.size(32.dp)
                         )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "AI Health Assistant",
+                                text = "Admin Panel",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "Tap the chat icon to get health advice",
+                                text = "Manage users, settings, and more",
                                 fontSize = 12.sp,
                                 color = Color.Gray
                             )
@@ -179,4 +156,3 @@ fun AdminDashboardScreen() {
         }
     }
 }
-
