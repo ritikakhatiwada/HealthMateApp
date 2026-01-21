@@ -1,6 +1,5 @@
 package com.example.myhealthmateaapp
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -50,7 +48,6 @@ class WelcomeActivity : ComponentActivity() {
 fun WelcomeBody() {
 
     // ✅ Context for navigation
-    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -120,8 +117,7 @@ fun WelcomeBody() {
                 // ✅ Login Button
                 Button(
                     onClick = {
-                        val intent = Intent(context, LoginActivity::class.java)
-                        context.startActivity(intent)
+
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -142,8 +138,7 @@ fun WelcomeBody() {
                 // ✅ Sign Up Button
                 Button(
                     onClick = {
-                        val intent = Intent(context, SignupActivity::class.java)
-                        context.startActivity(intent)
+
                     },
                     modifier = Modifier
                         .fillMaxWidth()

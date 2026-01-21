@@ -44,7 +44,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import com.example.myhealthmateaapp.ui.theme.MyHealthMateaAppTheme
 class SignupActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -104,8 +104,7 @@ fun SignupBody() {
                     onValueChange = { firstName = it },
                     placeholder = { Text("First name") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+                    shape = RoundedCornerShape(12.dp)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -115,8 +114,7 @@ fun SignupBody() {
                     onValueChange = { lastName = it },
                     placeholder = { Text("Last name") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+                    shape = RoundedCornerShape(12.dp)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -124,11 +122,9 @@ fun SignupBody() {
                 OutlinedTextField(
                     value = dob,
                     onValueChange = { dob = it },
-                    placeholder = { Text("Date of Birth (MM/DD/YYYY)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    placeholder = { Text("Date of Birth") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+                    shape = RoundedCornerShape(12.dp)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -139,8 +135,7 @@ fun SignupBody() {
                     placeholder = { Text("Email") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+                    shape = RoundedCornerShape(12.dp)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -166,23 +161,21 @@ fun SignupBody() {
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+                    shape = RoundedCornerShape(12.dp)
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
                     onClick = {
-                        if (firstName.isBlank() || lastName.isBlank() || email.isBlank() || password.isBlank()) {
+                        if (email.isBlank() || password.isBlank() || firstName.isBlank()) {
                             Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_LONG).show()
                         } else {
-                            // TODO: Logic to save user to database goes here
+                            // 1. Logic to save user to database goes here
 
-                            // Navigate back to Login after successful signup
+                            // 2. Navigate back to Login
                             Toast.makeText(context, "Account Created Successfully!", Toast.LENGTH_SHORT).show()
                             val intent = Intent(context, LoginActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                             context.startActivity(intent)
                             (context as? ComponentActivity)?.finish()
                         }
@@ -205,9 +198,8 @@ fun SignupBody() {
                     color = Color(0xFF1E88E5),
                     fontSize = 14.sp,
                     modifier = Modifier.clickable {
-                        val intent = Intent(context, LoginActivity::class.java)
-                        context.startActivity(intent)
-                        (context as? ComponentActivity)?.finish()
+                        context.startActivity(Intent(context, LoginActivity::class.java))
+
                     }
                 )
             }
