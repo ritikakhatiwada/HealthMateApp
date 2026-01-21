@@ -21,7 +21,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,7 +38,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myhealthmateaapp.ui.theme.MyHealthMateaAppTheme
+
+class ForgetPasswordActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            ForgetPasswordBody()
+        }
+    }
+}
 
 @Composable
 fun ForgetPasswordBody() {
@@ -62,7 +70,11 @@ fun ForgetPasswordBody() {
                 .fillMaxWidth(0.9f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Forgot Password?", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Forgot Password?",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -77,10 +89,12 @@ fun ForgetPasswordBody() {
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
+                label = { Text("Email") },
                 placeholder = { Text("abc@gmail.com") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -91,20 +105,27 @@ fun ForgetPasswordBody() {
                     if (email.isBlank()) {
                         Toast.makeText(context, "Please enter email", Toast.LENGTH_LONG).show()
                     } else {
-                        // Logic for sending email would go here
-                        Toast.makeText(context, "Verification code sent!", Toast.LENGTH_SHORT)
-                            .show()
+                        // TODO: Logic for sending email would go here
+                        Toast.makeText(context, "Verification code sent!", Toast.LENGTH_SHORT).show()
 
-                        // Navigate to ResetPasswordActivity (Next step in your flow)
+                        // Navigate to ResetPasswordActivity
                         val intent = Intent(context, ResetPasswordActivity::class.java)
+                        intent.putExtra("email", email) // Pass email to next screen
                         context.startActivity(intent)
+                        (context as? ComponentActivity)?.finish()
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34C759))
             ) {
-                Text(text = "Reset Password", color = Color.White, fontSize = 16.sp)
+                Text(
+                    text = "Send Reset Code",
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -117,15 +138,15 @@ fun ForgetPasswordBody() {
                 modifier = Modifier.clickable {
                     val intent = Intent(context, LoginActivity::class.java)
                     context.startActivity(intent)
-
+                    (context as? ComponentActivity)?.finish()
                 }
             )
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun ForgetPasswordPreview() {
     ForgetPasswordBody()
 }
-
