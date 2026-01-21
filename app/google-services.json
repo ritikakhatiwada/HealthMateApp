@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "72781745336",
+    "project_id": "myhealthmateapp-be875",
+    "storage_bucket": "myhealthmateapp-be875.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:72781745336:android:482f64604a4a14d852784d",
+        "android_client_info": {
+          "package_name": "com.example.myhealthmateaapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCysYcN-EVeSry6yUik7_qgRO4RpFvMATY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
