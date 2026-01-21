@@ -2,9 +2,9 @@ package com.example.myhealthmateaapp
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,7 +45,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myhealthmateaapp.ui.theme.MyHealthMateaAppTheme
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -174,7 +173,8 @@ fun LoginBody() {
                         fontSize = 13.sp,
                         color = Color(0xFF1E88E5),
                         modifier = Modifier.clickable {
-
+                            val intent = Intent(context, ResetPasswordActivity::class.java)
+                            context.startActivity(intent)
                         }
                     )
                 }
@@ -183,7 +183,17 @@ fun LoginBody() {
 
                 Button(
                     onClick = {
-                        // TODO: Login logic
+                        if (email.isBlank() || password.isBlank()) {
+                            Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                        } else {
+                            // TODO: Add actual login logic here
+                            Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+
+                            // Navigate to main/home activity after successful login
+                            // val intent = Intent(context, MainActivity::class.java)
+                            // context.startActivity(intent)
+                            // (context as? ComponentActivity)?.finish()
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -207,8 +217,8 @@ fun LoginBody() {
                     color = Color(0xFF1E88E5),
                     fontSize = 14.sp,
                     modifier = Modifier.clickable {
-
-
+                        val intent = Intent(context, SignupActivity::class.java)
+                        context.startActivity(intent)
                     }
                 )
             }
