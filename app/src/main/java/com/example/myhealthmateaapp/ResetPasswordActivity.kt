@@ -165,7 +165,6 @@ fun ResetPasswordBody() {
                     } else {
                         Toast.makeText(context, "Password reset successfully!", Toast.LENGTH_SHORT).show()
 
-                        // Navigate to Login and clear history so user can't go back to Reset screen
                         val intent = Intent(context, LoginActivity::class.java)
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         context.startActivity(intent)
