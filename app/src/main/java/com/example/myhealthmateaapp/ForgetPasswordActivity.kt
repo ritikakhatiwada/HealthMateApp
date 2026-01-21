@@ -130,7 +130,7 @@ fun ForgetPasswordBody() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // BACK TO LOGIN NAVIGATION
+
             Text(
                 text = "Remembered your password? Login",
                 color = Color(0xFF1E88E5),
