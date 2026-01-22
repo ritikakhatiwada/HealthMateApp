@@ -5,5 +5,6 @@
     <string name="title_activity_sign_up">SignUpActivity</string>
     <string name="title_activity_add_medicine_screen">AddMedicineScreen</string>
     <string name="title_activity_appointment">AppointmentActivity</string>
-    <string name="title_activity_medicine_expiry">MedicineExpiryActivity</string>
+    <string name="title_activity_home_screen">HomeScreen</string>
+    <string name="title_activity_main2">MainActivity2</string>
 </resources>
