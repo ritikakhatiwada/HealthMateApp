@@ -24,7 +24,7 @@ data class MedicineFormData(
     val timesPerDay: String,
     val startDate: String,
     val endDate: String,
-    val notes: String
+    val notes: String,
 )
 
 // Main Screen (UI Only)
