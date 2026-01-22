@@ -12,9 +12,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyHealthMateaApp">
         <activity
-            android:name=".MedicineExpiryActivity"
+            android:name=".MainActivity2"
             android:exported="true"
-            android:label="@string/title_activity_medicine_expiry"
+            android:label="@string/title_activity_main2"
+            android:theme="@style/Theme.MyHealthMateaApp">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".HomeScreen"
+            android:exported="true"
+            android:label="@string/title_activity_home_screen"
             android:theme="@style/Theme.MyHealthMateaApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
