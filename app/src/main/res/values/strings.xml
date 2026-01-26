@@ -8,4 +8,6 @@
     <string name="title_activity_home_screen">HomeScreen</string>
     <string name="title_activity_main2">MainActivity2</string>
     <string name="title_activity_hoapital_locator">HoapitalLocatorActivity</string>
+    <string name="title_activity_symptom_analyzer">SymptomAnalyzerActivity</string>
+    <string name="title_activity_medical_history">MedicalHistoryActivity</string>
 </resources>
