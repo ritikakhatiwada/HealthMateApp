@@ -1,4 +1,4 @@
-package com.example.myhealthmateapp.viewmodel
+package com.example.myhealthmateaapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
