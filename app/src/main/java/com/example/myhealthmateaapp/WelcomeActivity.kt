@@ -1,32 +1,22 @@
 package com.example.myhealthmateaapp
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,7 +37,8 @@ class WelcomeActivity : ComponentActivity() {
 @Composable
 fun WelcomeBody() {
 
-    // ✅ Context for navigation
+    // ✅ Context for Intent navigation
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -61,6 +52,7 @@ fun WelcomeBody() {
                 )
             )
     ) {
+
         // Background image
         Image(
             painter = painterResource(id = R.drawable.doctors),
@@ -70,7 +62,7 @@ fun WelcomeBody() {
             alpha = 0.3f
         )
 
-        // Main content card
+        // Main card
         Card(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -108,16 +100,17 @@ fun WelcomeBody() {
                     text = "Your Health Companion",
                     fontSize = 16.sp,
                     color = Color(0xFF0E7490),
-                    textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Medium
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // ✅ Login Button
+                // 🔵 Login Button
                 Button(
                     onClick = {
-
+                        context.startActivity(
+                            Intent(context, LoginActivity::class.java)
+                        )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -135,10 +128,12 @@ fun WelcomeBody() {
                     )
                 }
 
-                // ✅ Sign Up Button
+                // 🟢 Sign Up Button
                 Button(
                     onClick = {
-
+                        context.startActivity(
+                            Intent(context, SignupActivity::class.java)
+                        )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
