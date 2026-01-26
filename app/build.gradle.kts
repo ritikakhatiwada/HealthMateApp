@@ -60,4 +60,30 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+
+        // Core Compose
+    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material3:material3")
+
+        // 🔥 REQUIRED FOR Icons.Default.Science, LocalHospital, etc.
+    implementation("androidx.compose.material:material-icons-extended")
+
+        // Navigation (you already use NavController)
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+        // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.material:material-icons-extended")
+
+
+
+
+
+
+
 }
