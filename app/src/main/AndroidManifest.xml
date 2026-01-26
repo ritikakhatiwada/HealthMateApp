@@ -12,6 +12,28 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyHealthMateaApp">
         <activity
+            android:name=".MedicalHistoryActivity"
+            android:exported="true"
+            android:label="@string/title_activity_medical_history"
+            android:theme="@style/Theme.MyHealthMateaApp">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".SymptomAnalyzerActivity"
+            android:exported="true"
+            android:label="@string/title_activity_symptom_analyzer"
+            android:theme="@style/Theme.MyHealthMateaApp">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".HoapitalLocatorActivity"
             android:exported="true"
             android:label="@string/title_activity_hoapital_locator"
