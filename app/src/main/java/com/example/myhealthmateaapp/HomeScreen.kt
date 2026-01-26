@@ -126,7 +126,10 @@ fun HomeScreen(navController: NavController) {
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
                                 placeholder = {
-                                    Text("Search symptoms, medications…", color = Color.White)
+                                    Text(
+                                        "Search symptoms, medications…",
+                                        style = LocalTextStyle.current.copy(color = Color.White)
+                                    )
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -149,7 +152,7 @@ fun HomeScreen(navController: NavController) {
             item {
                 Card(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                         .clickable {
                             navController.navigate(Screen.EmergencyServices.route)
                         },
@@ -173,6 +176,7 @@ fun HomeScreen(navController: NavController) {
                 }
             }
 
+            // Features Title
             item {
                 Text(
                     "Features",
@@ -182,16 +186,16 @@ fun HomeScreen(navController: NavController) {
                 )
             }
 
+            // Feature Rows
             item {
                 FeatureRow(
-                    Feature(
+                    left = Feature(
                         "Symptom Analyzer",
                         "AI symptom checker",
                         Icons.Default.Search,
                         Color(0xFF6C63FF)
                     ) { navController.navigate(Screen.SymptomAnalyzer.route) },
-
-                    Feature(
+                    right = Feature(
                         "AI Assistant",
                         "Chat with AI doctor",
                         Icons.Default.Face,
@@ -202,14 +206,13 @@ fun HomeScreen(navController: NavController) {
 
             item {
                 FeatureRow(
-                    Feature(
+                    left = Feature(
                         "Appointments",
                         "Book visits",
                         Icons.Default.DateRange,
                         Color(0xFF4CAF50)
                     ) { navController.navigate(Screen.Appointments.route) },
-
-                    Feature(
+                    right = Feature(
                         "Medicine Reminder",
                         "Track medicines",
                         Icons.Default.Notifications,
@@ -220,14 +223,13 @@ fun HomeScreen(navController: NavController) {
 
             item {
                 FeatureRow(
-                    Feature(
+                    left = Feature(
                         "Hospital Locator",
                         "Find hospitals",
                         Icons.Default.LocationOn,
                         Color(0xFFFF4444)
                     ) { navController.navigate(Screen.HospitalLocator.route) },
-
-                    Feature(
+                    right = Feature(
                         "Medical History",
                         "View records",
                         Icons.Default.Info,
@@ -248,36 +250,39 @@ data class Feature(
     val title: String,
     val subtitle: String,
     val icon: ImageVector,
-    val color: Color
+    val color: Color,
+    val onClick: () -> Unit
 )
 
 @Composable
 fun FeatureRow(left: Feature, right: Feature) {
-    Row(
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        FeatureCard(left, Modifier.weight(1f))
-        FeatureCard(right, Modifier.weight(1f))
+    Column {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FeatureCard(left, Modifier.weight(1f), left.onClick)
+            FeatureCard(right, Modifier.weight(1f), right.onClick)
+        }
+        Spacer(modifier = Modifier.height(12.dp))
     }
-    Spacer(modifier = Modifier.height(12.dp))
 }
 
 @Composable
-fun FeatureCard(feature: Feature, modifier: Modifier) {
+fun FeatureCard(feature: Feature, modifier: Modifier, onClick: () -> Unit) {
     Card(
         modifier = modifier
             .height(120.dp)
-            .clickable { },
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(feature.icon, null, tint = feature.color)
+            Icon(feature.icon, contentDescription = null, tint = feature.color)
             Column {
                 Text(feature.title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Text(feature.subtitle, fontSize = 11.sp, color = Color.Gray)
