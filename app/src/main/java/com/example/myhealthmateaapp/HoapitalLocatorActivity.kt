@@ -1,7 +1,5 @@
 package com.example.myhealthmateaapp
 
-
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,20 +11,23 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// ============================================================
+// MAIN SCREEN
+// ============================================================
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HospitalLocatorScreen(onBackClick: () -> Unit) {
+
     var selectedFilter by remember { mutableStateOf("All") }
 
     val hospitals = remember {
@@ -84,26 +85,13 @@ fun HospitalLocatorScreen(onBackClick: () -> Unit) {
             TopAppBar(
                 title = {
                     Column {
-                        Text(
-                            "Hospital Locator",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Text(
-                            "Find nearby medical facilities",
-                            fontSize = 13.sp,
-                            color = Color.White.copy(alpha = 0.9f)
-                        )
+                        Text("Hospital Locator", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Find nearby medical facilities", fontSize = 13.sp, color = Color.White.copy(0.9f))
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -112,130 +100,70 @@ fun HospitalLocatorScreen(onBackClick: () -> Unit) {
             )
         }
     ) { paddingValues ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
                 .padding(paddingValues)
         ) {
-            // Map Section
+
+            // Map Placeholder
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp)
-                    .background(Color(0xFF7B9FE8))
+                    .background(Color(0xFF7B9FE8)),
+                contentAlignment = Alignment.Center
             ) {
-                // Map markers
                 Icon(
                     Icons.Default.LocationOn,
-                    contentDescription = "Location",
-                    tint = Color(0xFFD32F2F),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.TopStart)
-                        .offset(40.dp, 40.dp)
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(48.dp)
                 )
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = "Location",
-                    tint = Color(0xFFD32F2F),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.TopEnd)
-                        .offset((-40).dp, 60.dp)
+                Text(
+                    "Your Location",
+                    color = Color.White,
+                    modifier = Modifier.padding(top = 64.dp)
                 )
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = "Location",
-                    tint = Color(0xFFD32F2F),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.BottomStart)
-                        .offset(60.dp, (-30).dp)
-                )
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = "Location",
-                    tint = Color(0xFFD32F2F),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.BottomEnd)
-                        .offset((-60).dp, (-60).dp)
-                )
-
-                // Center location indicator
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.White,
-                        modifier = Modifier.size(60.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.LocationOn,
-                            contentDescription = "Your Location",
-                            tint = Color(0xFF1976D2),
-                            modifier = Modifier
-                                .padding(12.dp)
-                                .size(36.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Your Location",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                    Text(
-                        "Downtown Area",
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                }
             }
 
-            // Filter Tabs
+            // Filter Chips
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 FilterChip(
-                    text = "All Hospitals (5)",
-                    isSelected = selectedFilter == "All",
-                    onClick = { selectedFilter = "All" }
-                )
+                    text = "All Hospitals (${hospitals.size})",
+                    isSelected = selectedFilter == "All"
+                ) { selectedFilter = "All" }
+
                 FilterChip(
                     text = "Emergency Only",
-                    isSelected = selectedFilter == "Emergency",
-                    onClick = { selectedFilter = "Emergency" }
-                )
+                    isSelected = selectedFilter == "Emergency"
+                ) { selectedFilter = "Emergency" }
             }
 
             // Hospital List
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp),
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(filteredHospitals) { hospital ->
-                    HospitalCard(hospital = hospital)
+                items(filteredHospitals) {
+                    HospitalCard(it)
                 }
             }
         }
     }
 }
 
+// ============================================================
+// FILTER CHIP
+// ============================================================
+
 @Composable
-fun FilterChip(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
+fun FilterChip(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         color = if (isSelected) Color(0xFFD32F2F) else Color.White,
@@ -243,185 +171,86 @@ fun FilterChip(
         border = if (!isSelected) ButtonDefaults.outlinedButtonBorder else null
     ) {
         Text(
-            text = text,
+            text,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             fontSize = 13.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isSelected) Color.White else Color(0xFF424242)
+            fontWeight = FontWeight.Medium,
+            color = if (isSelected) Color.White else Color.Black
         )
     }
 }
 
+// ============================================================
+// HOSPITAL CARD
+// ============================================================
+
 @Composable
 fun HospitalCard(hospital: Hospital) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Header with name and rating
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = hospital.name,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF212121)
-                    )
-                    Text(
-                        text = hospital.type,
-                        fontSize = 13.sp,
-                        color = Color(0xFF757575),
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
+                    Text(hospital.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(hospital.type, fontSize = 13.sp, color = Color.Gray)
                 }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = "Rating",
-                        tint = Color(0xFFFFC107),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = hospital.rating.toString(),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF212121)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Star, null, tint = Color(0xFFFFC107), modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(hospital.rating.toString(), fontWeight = FontWeight.SemiBold)
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
 
-            // Info badges
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                InfoBadge(
-                    text = hospital.distance,
-                    icon = Icons.Default.Place,
-                    color = Color(0xFF1976D2)
-                )
-                if (hospital.hasEmergency) {
-                    InfoBadge(
-                        text = "Emergency",
-                        icon = Icons.Default.Warning,
-                        color = Color(0xFFD32F2F)
-                    )
-                }
-                if (hospital.is24x7) {
-                    InfoBadge(
-                        text = "24/7",
-                        icon = Icons.Default.CheckCircle,
-                        color = Color(0xFF388E3C)
-                    )
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                InfoBadge(hospital.distance, Icons.Default.Place, Color(0xFF1976D2))
+                if (hospital.hasEmergency)
+                    InfoBadge("Emergency", Icons.Default.Warning, Color(0xFFD32F2F))
+                if (hospital.is24x7)
+                    InfoBadge("24/7", Icons.Default.CheckCircle, Color(0xFF388E3C))
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
 
-            // Address
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 8.dp)
-            ) {
-                Icon(
-                    Icons.Default.Place,
-                    contentDescription = "Address",
-                    tint = Color(0xFF757575),
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = hospital.address,
-                    fontSize = 13.sp,
-                    color = Color(0xFF424242)
-                )
-            }
+            Text("📍 ${hospital.address}", fontSize = 13.sp)
+            Text("📞 ${hospital.phone}", fontSize = 13.sp)
 
-            // Phone
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.Phone,
-                    contentDescription = "Phone",
-                    tint = Color(0xFF757575),
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = hospital.phone,
-                    fontSize = 13.sp,
-                    color = Color(0xFF424242)
-                )
-            }
+            Spacer(Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Action buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
-                    onClick = { /* Open directions */ },
+                    onClick = {},
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFD32F2F)
-                    ),
-                    shape = RoundedCornerShape(8.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
                 ) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = "Directions",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Directions", fontSize = 13.sp)
+                    Icon(Icons.Default.LocationOn, null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Directions")
                 }
                 Button(
-                    onClick = { /* Make call */ },
+                    onClick = {},
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
-                    ),
-                    shape = RoundedCornerShape(8.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
-                    Icon(
-                        Icons.Default.Phone,
-                        contentDescription = "Call",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Call", fontSize = 13.sp)
+                    Icon(Icons.Default.Phone, null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Call")
                 }
             }
         }
     }
 }
 
+// ============================================================
+// INFO BADGE
+// ============================================================
+
 @Composable
-fun InfoBadge(
-    text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color
-) {
+fun InfoBadge(text: String, icon: ImageVector, color: Color) {
     Surface(
         color = color.copy(alpha = 0.1f),
         shape = RoundedCornerShape(6.dp)
@@ -430,22 +259,31 @@ fun InfoBadge(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(14.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = text,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                color = color
-            )
+            Icon(icon, null, tint = color, modifier = Modifier.size(14.dp))
+            Spacer(Modifier.width(4.dp))
+            Text(text, fontSize = 11.sp, color = color)
         }
     }
 }
+
+// ============================================================
+// DATA CLASS
+// ============================================================
+
+data class Hospital(
+    val name: String,
+    val type: String,
+    val distance: String,
+    val hasEmergency: Boolean,
+    val is24x7: Boolean,
+    val address: String,
+    val phone: String,
+    val rating: Double
+)
+
+// ============================================================
+// PREVIEW
+// ============================================================
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
