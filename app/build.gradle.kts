@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 
@@ -10,26 +11,26 @@ import java.io.FileInputStream
 
 // Load local.properties for API key
 val localPropertiesFile = rootProject.file("local.properties")
-val apiKey = if (localPropertiesFile.exists()) {
-    val localProperties = Properties()
+val localProperties = Properties()
+if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
-    localProperties.getProperty("GEMINI_API_KEY") 
-        ?: "AIzaSyAzpCosYSFJbODADaO297SI7reAClX-yjU"
-} else {
-    "AIzaSyAzpCosYSFJbODADaO297SI7reAClX-yjU"
 }
+
+val apiKey = localProperties.getProperty("GEMINI_API_KEY") ?: "AIzaSyAzpCosYSFJbODADaO297SI7reAClX-yjU"
+val hfApiKey = localProperties.getProperty("HF_API_KEY") ?: ""
+val cloudinaryCloudName = localProperties.getProperty("CLOUDINARY_CLOUD_NAME") ?: ""
+val cloudinaryApiKey = localProperties.getProperty("CLOUDINARY_API_KEY") ?: ""
+val cloudinaryApiSecret = localProperties.getProperty("CLOUDINARY_API_SECRET") ?: ""
 
 
 android {
     namespace = "com.example.healthmate"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.healthmate"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -48,6 +49,10 @@ android {
         
 
         buildConfigField("String", "GEMINI_API_KEY", "\"$apiKey\"")
+        buildConfigField("String", "HF_API_KEY", "\"$hfApiKey\"")
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudinaryCloudName\"")
+        buildConfigField("String", "CLOUDINARY_API_KEY", "\"$cloudinaryApiKey\"")
+        buildConfigField("String", "CLOUDINARY_API_SECRET", "\"$cloudinaryApiSecret\"")
     }
 
     buildTypes {
@@ -87,6 +92,20 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.google.generativeai)
+    
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.messaging)
+    
+    // Cloudinary
+    implementation(libs.cloudinary.android)
+
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -94,4 +113,5 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
