@@ -2,7 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -40,7 +46,7 @@
             android:theme="@style/Theme.HealthMate" />
 
         <activity
-            android:name=".SignupActivity"
+            android:name=".SignUpActivity"
             android:exported="false"
             android:label="@string/title_activity_sign_up"
             android:theme="@style/Theme.HealthMate" />
@@ -57,31 +63,141 @@
             android:label="@string/title_activity_reset_password"
             android:theme="@style/Theme.HealthMate" />
 
-        <!-- Dashboard Screens -->
+        <!-- User Dashboard -->
         <activity
             android:name=".UserDashBoardActivity"
             android:exported="false"
             android:label="@string/title_activity_user_dash_board"
             android:theme="@style/Theme.HealthMate" />
 
+        <!-- Admin Dashboard -->
         <activity
             android:name=".AdminDashBoardActivity"
             android:exported="false"
             android:label="@string/title_activity_admin_dash_board"
             android:theme="@style/Theme.HealthMate" />
 
-        <!-- Chatbot (accessed from User Dashboard) -->
+        <!-- Chatbot -->
         <activity
             android:name=".ChatbotActivity"
             android:exported="false"
             android:label="@string/title_activity_chatbot"
             android:theme="@style/Theme.HealthMate" />
 
-            <!-- AUTH -->
-            <activity android:name=".LoginActivity" />
-            <activity android:name=".SignUpActivity" />
-            <activity android:name=".ForgetPasswordActivity" />
-            <activity android:name=".ResetPasswordActivity" />
+        <!-- Notifications -->
+        <activity
+            android:name=".NotificationsActivity"
+            android:exported="false"
+            android:label="Notifications"
+            android:theme="@style/Theme.HealthMate" />
+
+        <!-- Appointments -->
+        <activity
+            android:name=".appointments.DoctorListActivity"
+            android:exported="false"
+            android:label="Select Doctor"
+            android:theme="@style/Theme.HealthMate" />
+
+        <activity
+            android:name=".appointments.SlotSelectionActivity"
+            android:exported="false"
+            android:label="Select Slot"
+            android:theme="@style/Theme.HealthMate" />
+
+        <!-- Medical Records -->
+        <activity
+            android:name=".records.MedicalRecordsActivity"
+            android:exported="false"
+            android:label="Medical Records"
+            android:theme="@style/Theme.HealthMate" />
+
+        <!-- Medication Reminders -->
+        <activity
+            android:name=".reminders.MedicationRemindersActivity"
+            android:exported="false"
+            android:label="Medication Reminders"
+            android:theme="@style/Theme.HealthMate" />
+
+        <!-- Emergency SOS -->
+        <activity
+            android:name=".emergency.EmergencySOSActivity"
+            android:exported="false"
+            android:label="Emergency SOS"
+            android:theme="@style/Theme.HealthMate" />
+
+        <!-- Mental Wellness -->
+        <activity
+            android:name=".wellness.MentalWellnessActivity"
+            android:exported="false"
+            android:label="Mental Wellness"
+            android:theme="@style/Theme.HealthMate" />
+
+        <!-- Admin Activities -->
+        <activity
+            android:name=".admin.AdminUsersActivity"
+            android:exported="false"
+            android:label="Users"
+            android:theme="@style/Theme.HealthMate" />
+
+        <activity
+            android:name=".admin.UserMedicalRecordsActivity"
+            android:exported="false"
+            android:label="Medical Records"
+            android:theme="@style/Theme.HealthMate" />
+
+        <activity
+            android:name=".admin.AdminDoctorsActivity"
+            android:exported="false"
+            android:label="Doctors"
+            android:theme="@style/Theme.HealthMate" />
+
+        <activity
+            android:name=".admin.AdminAppointmentsActivity"
+            android:exported="false"
+            android:label="Appointments"
+            android:theme="@style/Theme.HealthMate" />
+
+        <activity
+            android:name=".admin.AdminEmergencyActivity"
+            android:exported="false"
+            android:label="Emergency Contacts"
+            android:theme="@style/Theme.HealthMate" />
+
+        <activity
+            android:name=".admin.DoctorDetailActivity"
+            android:exported="false"
+            android:label="Doctor Details"
+            android:theme="@style/Theme.HealthMate" />
+
+        <activity
+            android:name=".admin.AddDoctorActivity"
+            android:exported="false"
+            android:label="Add Doctor"
+            android:theme="@style/Theme.HealthMate" />
+
+        <activity
+            android:name=".admin.AdminWellnessActivity"
+            android:exported="false"
+            android:label="Wellness Resources"
+            android:theme="@style/Theme.HealthMate" />
+
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false"
+            android:label="Edit Profile"
+            android:theme="@style/Theme.HealthMate" />
+
+        <activity
+            android:name=".ChangePasswordActivity"
+            android:exported="false"
+            android:label="Change Password"
+            android:theme="@style/Theme.HealthMate" />
+
+        <receiver
+            android:name=".reminders.ReminderReceiver"
+            android:exported="false" />
+
+    </application>
 
             <!-- HOME -->
             <activity android:name=".HomeActivity" />
