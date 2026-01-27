@@ -1,3 +1,5 @@
+package com.example.myhealthmateaapp
+
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -40,8 +42,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myhealthmateaapp.LoginActivity
-import com.example.myhealthmateaapp.R
 
 class ResetPasswordActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
