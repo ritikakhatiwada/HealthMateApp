@@ -24,235 +24,334 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.healthmate.auth.FirebaseAuthHelper
+import com.example.healthmate.ui.theme.HealthMateTheme
+import com.example.healthmate.util.ThemeManager
+import kotlinx.coroutines.launch
 
 class LoginActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            LoginBody()
+        override fun onCreate(savedInstanceState: Bundle?) {
+                super.onCreate(savedInstanceState)
+                setContent {
+                        val themeManager = ThemeManager(this)
+                        val isDarkMode by themeManager.isDarkMode.collectAsState(initial = false)
+                        HealthMateTheme(darkTheme = isDarkMode) { LoginBody(isDarkMode) }
+                }
         }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginBody() {
+fun LoginBody(isDarkMode: Boolean = false) {
+        var email by remember { mutableStateOf("") }
+        var password by remember { mutableStateOf("") }
+        var passwordVisible by remember { mutableStateOf(false) }
+        var rememberMe by remember { mutableStateOf(false) }
+        var errorMessage by remember { mutableStateOf<String?>(null) }
+        var isLoading by remember { mutableStateOf(false) }
 
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var rememberMe by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+        val context = LocalContext.current
+        val activity = context as Activity
+        val coroutineScope = rememberCoroutineScope()
 
-    val context = LocalContext.current
-    val activity = context as Activity
+        // Colors based on theme
+        val cardBgColor =
+                if (isDarkMode) MaterialTheme.colorScheme.surface
+                else Color.White.copy(alpha = 0.95f)
+        val textColor = if (isDarkMode) MaterialTheme.colorScheme.onSurface else Color.Black
+        val secondaryTextColor =
+                if (isDarkMode) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray
 
-    Scaffold { padding ->
+        Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+                Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+                        // Background Image
+                        Image(
+                                painter = painterResource(R.drawable.background),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                                alpha = if (isDarkMode) 0.3f else 1f
+                        )
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-
-            Image(
-                painter = painterResource(R.drawable.background),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-
-            Column(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .background(
-                        Color.White.copy(alpha = 0.9f),
-                        RoundedCornerShape(20.dp)
-                    )
-                    .padding(20.dp)
-                    .fillMaxWidth(0.9f),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
-                Text(
-                    text = "Login",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Show error message if any
-                errorMessage?.let { error ->
-                    Text(
-                        text = error,
-                        color = Color.Red,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { 
-                        email = it 
-                        errorMessage = null
-                    },
-                    label = { Text("Email") },
-                    placeholder = { Text("Enter your email") },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { 
-                        password = it 
-                        errorMessage = null
-                    },
-                    label = { Text("Password") },
-                    placeholder = { Text("Enter your password") },
-                    visualTransformation =
-                        if (passwordVisible)
-                            VisualTransformation.None
-                        else
-                            PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password
-                    ),
-                    trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                passwordVisible = !passwordVisible
-                            }
+                        Column(
+                                modifier =
+                                        Modifier.align(Alignment.Center)
+                                                .background(cardBgColor, RoundedCornerShape(20.dp))
+                                                .padding(24.dp)
+                                                .fillMaxWidth(0.9f),
+                                horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(
-                                painter = painterResource(
-                                    if (passwordVisible)
-                                        R.drawable.outline_visibility_off_24
-                                    else
-                                        R.drawable.baseline_visibility_24
-                                ),
-                                contentDescription = null
-                            )
+                                Text(
+                                        text = "Login",
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = textColor
+                                )
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                // Show error message if any
+                                errorMessage?.let { error ->
+                                        Text(
+                                                text = error,
+                                                color = Color.Red,
+                                                fontSize = 14.sp,
+                                                modifier = Modifier.padding(bottom = 12.dp)
+                                        )
+                                }
+
+                                OutlinedTextField(
+                                        value = email,
+                                        onValueChange = {
+                                                email = it
+                                                errorMessage = null
+                                        },
+                                        label = { Text("Email", color = secondaryTextColor) },
+                                        placeholder = {
+                                                Text("Enter your email", color = secondaryTextColor)
+                                        },
+                                        keyboardOptions =
+                                                KeyboardOptions(keyboardType = KeyboardType.Email),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(12.dp),
+                                        singleLine = true,
+                                        enabled = !isLoading,
+                                        colors =
+                                                OutlinedTextFieldDefaults.colors(
+                                                        focusedTextColor = textColor,
+                                                        unfocusedTextColor = textColor,
+                                                        focusedBorderColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        unfocusedBorderColor = secondaryTextColor,
+                                                        cursorColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        disabledTextColor = secondaryTextColor,
+                                                        focusedLabelColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        unfocusedLabelColor = secondaryTextColor
+                                                )
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                OutlinedTextField(
+                                        value = password,
+                                        onValueChange = {
+                                                password = it
+                                                errorMessage = null
+                                        },
+                                        label = { Text("Password", color = secondaryTextColor) },
+                                        placeholder = {
+                                                Text(
+                                                        "Enter your password",
+                                                        color = secondaryTextColor
+                                                )
+                                        },
+                                        visualTransformation =
+                                                if (passwordVisible) VisualTransformation.None
+                                                else PasswordVisualTransformation(),
+                                        keyboardOptions =
+                                                KeyboardOptions(
+                                                        keyboardType = KeyboardType.Password
+                                                ),
+                                        trailingIcon = {
+                                                IconButton(
+                                                        onClick = {
+                                                                passwordVisible = !passwordVisible
+                                                        }
+                                                ) {
+                                                        Icon(
+                                                                painter =
+                                                                        painterResource(
+                                                                                if (passwordVisible)
+                                                                                        R.drawable
+                                                                                                .outline_visibility_off_24
+                                                                                else
+                                                                                        R.drawable
+                                                                                                .baseline_visibility_24
+                                                                        ),
+                                                                contentDescription = null,
+                                                                tint = secondaryTextColor
+                                                        )
+                                                }
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(12.dp),
+                                        singleLine = true,
+                                        enabled = !isLoading,
+                                        colors =
+                                                OutlinedTextFieldDefaults.colors(
+                                                        focusedTextColor = textColor,
+                                                        unfocusedTextColor = textColor,
+                                                        focusedBorderColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        unfocusedBorderColor = secondaryTextColor,
+                                                        cursorColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        disabledTextColor = secondaryTextColor,
+                                                        focusedLabelColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        unfocusedLabelColor = secondaryTextColor
+                                                )
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                        Checkbox(
+                                                checked = rememberMe,
+                                                onCheckedChange = { rememberMe = it },
+                                                enabled = !isLoading,
+                                                colors =
+                                                        CheckboxDefaults.colors(
+                                                                checkedColor =
+                                                                        MaterialTheme.colorScheme
+                                                                                .primary,
+                                                                uncheckedColor = secondaryTextColor,
+                                                                checkmarkColor = Color.White
+                                                        )
+                                        )
+
+                                        Text("Remember me", fontSize = 14.sp, color = textColor)
+
+                                        Spacer(modifier = Modifier.weight(1f))
+
+                                        Text(
+                                                text = "Forgot Password?",
+                                                fontSize = 14.sp,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                modifier =
+                                                        Modifier.clickable(enabled = !isLoading) {
+                                                                val intent =
+                                                                        Intent(
+                                                                                context,
+                                                                                ForgetPasswordActivity::class
+                                                                                        .java
+                                                                        )
+                                                                context.startActivity(intent)
+                                                        }
+                                        )
+                                }
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                Button(
+                                        onClick = {
+                                                if (email.isBlank() || password.isBlank()) {
+                                                        errorMessage = "Please fill in all fields"
+                                                        return@Button
+                                                }
+
+                                                isLoading = true
+                                                errorMessage = null
+
+                                                coroutineScope.launch {
+                                                        val result =
+                                                                FirebaseAuthHelper.login(
+                                                                        email.trim(),
+                                                                        password
+                                                                )
+                                                        isLoading = false
+
+                                                        result.fold(
+                                                                onSuccess = { role ->
+                                                                        Toast.makeText(
+                                                                                        context,
+                                                                                        "Login successful!",
+                                                                                        Toast.LENGTH_SHORT
+                                                                                )
+                                                                                .show()
+
+                                                                        val intent =
+                                                                                when (role.uppercase()
+                                                                                ) {
+                                                                                        "ADMIN" ->
+                                                                                                Intent(
+                                                                                                        context,
+                                                                                                        AdminDashBoardActivity::class
+                                                                                                                .java
+                                                                                                )
+                                                                                        else ->
+                                                                                                Intent(
+                                                                                                        context,
+                                                                                                        UserDashBoardActivity::class
+                                                                                                                .java
+                                                                                                )
+                                                                                }
+                                                                        intent.flags =
+                                                                                Intent.FLAG_ACTIVITY_NEW_TASK or
+                                                                                        Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                                                        context.startActivity(
+                                                                                intent
+                                                                        )
+                                                                        activity.finish()
+                                                                },
+                                                                onFailure = { error ->
+                                                                        errorMessage =
+                                                                                error.message
+                                                                                        ?: "Login failed"
+                                                                }
+                                                        )
+                                                }
+                                        },
+                                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        enabled = !isLoading,
+                                        colors =
+                                                ButtonDefaults.buttonColors(
+                                                        containerColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        disabledContainerColor =
+                                                                MaterialTheme.colorScheme.primary
+                                                                        .copy(alpha = 0.6f)
+                                                )
+                                ) {
+                                        if (isLoading) {
+                                                CircularProgressIndicator(
+                                                        modifier = Modifier.size(24.dp),
+                                                        color = Color.White,
+                                                        strokeWidth = 2.dp
+                                                )
+                                        } else {
+                                                Text(
+                                                        "Login",
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.SemiBold
+                                                )
+                                        }
+                                }
+
+                                Spacer(modifier = Modifier.height(20.dp))
+
+                                Row {
+                                        Text(
+                                                "Don't have an account? ",
+                                                fontSize = 14.sp,
+                                                color = secondaryTextColor
+                                        )
+                                        Text(
+                                                text = "Sign Up",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                modifier =
+                                                        Modifier.clickable(enabled = !isLoading) {
+                                                                val intent =
+                                                                        Intent(
+                                                                                context,
+                                                                                SignUpActivity::class
+                                                                                        .java
+                                                                        )
+                                                                context.startActivity(intent)
+                                                        }
+                                        )
+                                }
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    Checkbox(
-                        checked = rememberMe,
-                        onCheckedChange = { rememberMe = it }
-                    )
-
-                    Text("Remember me", fontSize = 13.sp)
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Text(
-                        text = "Forgot Password?",
-                        fontSize = 13.sp,
-                        color = Color(0xFF1E88E5),
-                        modifier = Modifier.clickable {
-                            val intent =
-                                Intent(context, ForgetPasswordActivity::class.java)
-                            context.startActivity(intent)
-                        }
-                    )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = {
-                        // Validate credentials
-                        val role = AuthConstants.validateCredentials(email.trim(), password)
-                        
-                        when (role) {
-                            "user" -> {
-                                Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-                                val intent = Intent(context, UserDashBoardActivity::class.java)
-                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                context.startActivity(intent)
-                                activity.finish()
-                            }
-                            "admin" -> {
-                                Toast.makeText(context, "Admin login successful!", Toast.LENGTH_SHORT).show()
-                                val intent = Intent(context, AdminDashBoardActivity::class.java)
-                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                context.startActivity(intent)
-                                activity.finish()
-                            }
-                            else -> {
-                                errorMessage = "Invalid email or password"
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF34C759)
-                    )
-                ) {
-                    Text(
-                        text = "Login",
-                        color = Color.White,
-                        fontSize = 16.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "Don't have an account? Sign Up",
-                    color = Color(0xFF1E88E5),
-                    fontSize = 14.sp,
-                    modifier = Modifier.clickable {
-                        val intent =
-                            Intent(context, SignupActivity::class.java)
-                        context.startActivity(intent)
-                    }
-                )
-                
-                // Test credentials hint
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Test: user@test.com / user123",
-                    fontSize = 11.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "Admin: admin@test.com / admin123",
-                    fontSize = 11.sp,
-                    color = Color.Gray
-                )
-            }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginPreview() {
-    LoginBody()
 }

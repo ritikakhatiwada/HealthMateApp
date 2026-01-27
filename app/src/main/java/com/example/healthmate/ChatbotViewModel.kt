@@ -55,24 +55,24 @@ class ChatbotViewModel(
             // Call repository to get AI response
             repository.sendMessage(userMessage, conversationHistory)
                 .onSuccess { aiResponse ->
-                    // Add AI response
-                    val aiChatMessage = ChatMessage(text = aiResponse, isUser = false)
-                    _messages.value = _messages.value + aiChatMessage
+                // Add AI response
+                val aiChatMessage = ChatMessage(text = aiResponse, isUser = false)
+                _messages.value = _messages.value + aiChatMessage
                 }
                 .onFailure { exception ->
-                    // Handle errors gracefully
-                    val errorMessage = ChatMessage(
+                // Handle errors gracefully
+                val errorMessage = ChatMessage(
                         text = "I apologize, but I'm experiencing technical difficulties. " +
                                 "Please check your internet connection and try again. " +
                                 "Error: ${exception.message}",
-                        isUser = false
-                    )
-                    _messages.value = _messages.value + errorMessage
+                    isUser = false
+                )
+                _messages.value = _messages.value + errorMessage
                     _error.value = exception.message
                 }
                 .also {
-                    _isLoading.value = false
-                }
+                _isLoading.value = false
+            }
         }
     }
 
