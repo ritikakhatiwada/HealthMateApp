@@ -1,0 +1,49 @@
+{
+  "lightMode": {
+    "primary": "#2CB5A0",
+    "onPrimary": "#FFFFFF",
+
+    "secondary": "#4FA3D1",
+    "onSecondary": "#FFFFFF",
+
+    "background": "#F9FBFC",
+    "onBackground": "#1F2933",
+
+    "surface": "#FFFFFF",
+    "onSurface": "#1F2933",
+
+    "textPrimary": "#1F2933",
+    "textSecondary": "#6B7280",
+
+    "success": "#34C759",
+    "warning": "#F59E0B",
+    "error": "#EF4444",
+
+    "divider": "#E5E7EB",
+    "disabled": "#9CA3AF"
+  },
+
+  "darkMode": {
+    "primary": "#4FD1C5",
+    "onPrimary": "#0F172A",
+
+    "secondary": "#60A5FA",
+    "onSecondary": "#0F172A",
+
+    "background": "#0F172A",
+    "onBackground": "#E5E7EB",
+
+    "surface": "#1E293B",
+    "onSurface": "#E5E7EB",
+
+    "textPrimary": "#E5E7EB",
+    "textSecondary": "#9CA3AF",
+
+    "success": "#4ADE80",
+    "warning": "#FBBF24",
+    "error": "#F87171",
+
+    "divider": "#334155",
+    "disabled": "#64748B"
+  }
+}
