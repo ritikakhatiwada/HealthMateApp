@@ -1,5 +1,6 @@
 package com.example.myhealthmateaapp
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -9,28 +10,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,24 +29,109 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myhealthmateaapp.ui.theme.MyHealthMateaAppTheme
-class SignupActivity : ComponentActivity() {
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.*
+
+/* ============================
+   ACTIVITY (Firebase logic)
+   ============================ */
+
+class SignUpActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val auth = FirebaseAuth.getInstance()
+        val db = FirebaseFirestore.getInstance()
+
         setContent {
-            SignupBody()
+            MyHealthMateaAppTheme {
+                SignupScreen(
+                    onSignupClick = { firstName, lastName, dob, email, password ->
+
+                        // ---------------- Validation ----------------
+                        if (firstName.isBlank() || lastName.isBlank() || dob.isBlank()
+                            || email.isBlank() || password.isBlank()
+                        ) {
+                            Toast.makeText(this, "All fields are required", Toast.LENGTH_LONG).show()
+                            return@SignupScreen
+                        }
+
+                        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                            Toast.makeText(this, "Invalid email address", Toast.LENGTH_LONG).show()
+                            return@SignupScreen
+                        }
+
+                        if (password.length < 6) {
+                            Toast.makeText(
+                                this,
+                                "Password must be at least 6 characters",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            return@SignupScreen
+                        }
+
+                        // ---------------- Firebase Signup ----------------
+                        auth.createUserWithEmailAndPassword(email, password)
+                            .addOnSuccessListener {
+                                val userId = auth.currentUser!!.uid
+
+                                val userData = mapOf(
+                                    "firstName" to firstName,
+                                    "lastName" to lastName,
+                                    "dob" to dob,
+                                    "email" to email
+                                )
+
+                                db.collection("users")
+                                    .document(userId)
+                                    .set(userData)
+
+                                Toast.makeText(this, "Account Created Successfully!", Toast.LENGTH_SHORT).show()
+                                startActivity(Intent(this, LoginActivity::class.java))
+                                finish()
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(this, it.localizedMessage, Toast.LENGTH_LONG).show()
+                            }
+                    },
+                    onLoginClick = {
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finish()
+                    }
+                )
+            }
         }
     }
 }
 
+/* ============================
+   UI (Compose)
+   ============================ */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignupBody() {
+fun SignupScreen(
+    onSignupClick: (
+        firstName: String,
+        lastName: String,
+        dob: String,
+        email: String,
+        password: String
+    ) -> Unit,
+    onLoginClick: () -> Unit
+) {
 
     val context = LocalContext.current
-    var dob by remember { mutableStateOf("") }
+    val calendar = Calendar.getInstance()
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
+    var dob by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -75,71 +144,94 @@ fun SignupBody() {
                 .padding(padding)
         ) {
 
+            // ---------------- Background Image ----------------
             Image(
-                painter = painterResource(R.drawable.background),
+                painter = painterResource(id = R.drawable.background),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
 
+            // ---------------- Signup Card ----------------
             Column(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(20.dp))
+                    .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(20.dp))
                     .padding(20.dp)
                     .fillMaxWidth(0.9f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
                 Text(
-                    "Sign Up",
+                    text = "Sign Up",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
+                // First Name
                 OutlinedTextField(
                     value = firstName,
                     onValueChange = { firstName = it },
-                    placeholder = { Text("First name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    placeholder = { Text("First Name") },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
+                // Last Name
                 OutlinedTextField(
                     value = lastName,
                     onValueChange = { lastName = it },
-                    placeholder = { Text("Last name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    placeholder = { Text("Last Name") },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
+                // ---------------- Date of Birth ----------------
                 OutlinedTextField(
                     value = dob,
-                    onValueChange = { dob = it },
+                    onValueChange = {},
+                    readOnly = true, // ✅ IMPORTANT
                     placeholder = { Text("Date of Birth") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, day ->
+                                    calendar.set(year, month, day)
+                                    dob = dateFormat.format(calendar.time)
+                                },
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH),
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        },
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.outline_calendar_today_24),
+                            contentDescription = "Select Date"
+                        )
+                    }
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
+                // Email
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     placeholder = { Text("Email") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
+                // Password
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -160,55 +252,48 @@ fun SignupBody() {
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Sign Up Button
                 Button(
                     onClick = {
-                        if (email.isBlank() || password.isBlank() || firstName.isBlank()) {
-                            Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_LONG).show()
-                        } else {
-                            // 1. Logic to save user to database goes here
-
-                            // 2. Navigate back to Login
-                            Toast.makeText(context, "Account Created Successfully!", Toast.LENGTH_SHORT).show()
-                            val intent = Intent(context, LoginActivity::class.java)
-                            context.startActivity(intent)
-                            (context as? ComponentActivity)?.finish()
-                        }
+                        onSignupClick(firstName, lastName, dob, email, password)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF34C759)
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34C759))
                 ) {
-                    Text("Sign Up", color = Color.White, fontSize = 16.sp)
+                    Text("Sign Up", color = Color.White)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Login Text
                 Text(
                     text = "Already have an account? Login",
                     color = Color(0xFF1E88E5),
-                    fontSize = 14.sp,
-                    modifier = Modifier.clickable {
-                        context.startActivity(Intent(context, LoginActivity::class.java))
-
-                    }
+                    modifier = Modifier.clickable { onLoginClick() }
                 )
             }
         }
     }
 }
 
+/* ============================
+   PREVIEW
+   ============================ */
+
 @Preview(showBackground = true)
 @Composable
 fun SignupPreview() {
-    SignupBody()
+    MyHealthMateaAppTheme {
+        SignupScreen(
+            onSignupClick = { _, _, _, _, _ -> },
+            onLoginClick = {}
+        )
+    }
 }

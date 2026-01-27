@@ -1,26 +1,66 @@
 {
   "project_info": {
-    "project_number": "72781745336",
-    "project_id": "myhealthmateapp-be875",
-    "storage_bucket": "myhealthmateapp-be875.firebasestorage.app"
+    "project_number": "889837540896",
+    "firebase_url": "https://healthmate-551de-default-rtdb.firebaseio.com",
+    "project_id": "healthmate-551de",
+    "storage_bucket": "healthmate-551de.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:72781745336:android:482f64604a4a14d852784d",
+        "mobilesdk_app_id": "1:889837540896:android:d46c8e99aefbab407c4e45",
         "android_client_info": {
-          "package_name": "com.example.myhealthmateaapp"
+          "package_name": "com.example.healthmate"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "889837540896-ef4h7vqrmtas88c6vu0b248bah009p5l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyCysYcN-EVeSry6yUik7_qgRO4RpFvMATY"
+          "current_key": "AIzaSyBAs6PI1qiGOT1GJn5TKeCx78XwarrM0Hk"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "889837540896-ef4h7vqrmtas88c6vu0b248bah009p5l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:889837540896:android:75dc9865fba744267c4e45",
+        "android_client_info": {
+          "package_name": "com.example.myhealthmateaapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "889837540896-ef4h7vqrmtas88c6vu0b248bah009p5l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAs6PI1qiGOT1GJn5TKeCx78XwarrM0Hk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "889837540896-ef4h7vqrmtas88c6vu0b248bah009p5l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -1,5 +1,11 @@
 package com.example.myhealthmateaapp
-
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,7 +40,22 @@ import java.util.UUID
 // ============================================================
 // MAIN SCREEN
 // ============================================================
+class MedicalHistoryActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
+        setContent {
+            MaterialTheme {
+                Surface {
+                    MedicalHistoryScreen(
+                        navController = rememberNavController()
+                    )
+                }
+            }
+        }
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MedicalHistoryScreen(

@@ -165,7 +165,7 @@ fun LoginBody() {
                 Button(
                     onClick = {
                         context.startActivity(
-                            Intent(context, HomeScreen()::class.java)
+                            Intent(context, HomeActivity()::class.java)
                         )
                         (context as ComponentActivity).finish()
                     },
@@ -193,7 +193,7 @@ fun LoginBody() {
                     fontSize = 14.sp,
                     modifier = Modifier.clickable {
                         context.startActivity(
-                            Intent(context, SignupActivity::class.java)
+                            Intent(context, SignUpActivity::class.java)
                         )
                     }
                 )

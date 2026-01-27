@@ -132,7 +132,7 @@ fun WelcomeBody() {
                 Button(
                     onClick = {
                         context.startActivity(
-                            Intent(context, SignupActivity::class.java)
+                            Intent(context, SignUpActivity::class.java)
                         )
                     },
                     modifier = Modifier
