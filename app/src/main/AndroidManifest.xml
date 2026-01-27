@@ -1,43 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.MyHealthMateaApp" >
-            <!-- ✅ ONLY ONE LAUNCHER -->
-            <activity
-                android:name=".WelcomeActivity"
-                android:exported="true">
-                <intent-filter>
-                    <action android:name="android.intent.action.MAIN" />
-                    <category android:name="android.intent.category.LAUNCHER" />
-                </intent-filter>
-            </activity>
+        android:theme="@style/Theme.MyHealthMateaApp">
 
-            <!-- AUTH -->
-            <activity android:name=".LoginActivity" />
-            <activity android:name=".SignUpActivity" />
-            <activity android:name=".ForgetPasswordActivity" />
-            <activity android:name=".ResetPasswordActivity" />
+        <!-- 🚀 LAUNCHER -->
+        <activity
+            android:name="com.example.myhealthmateaapp.SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
 
-            <!-- HOME -->
-            <activity android:name=".HomeActivity" />
+        <!-- WELCOME -->
+        <activity
+            android:name="com.example.myhealthmateaapp.WelcomeActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
 
-            <!-- FEATURES -->
-            <activity android:name=".AddMedicineActivity" />
-            <activity android:name=".MedicalHistoryActivity" />
-            <activity android:name=".MedicineExpiryActivity" />
-            <activity android:name=".AppointmentActivity" />
-            <activity android:name=".SymptomAnalyzerActivity" />
-            <activity android:name=".HospitalLocatorActivity" />
+        <!-- LOGIN -->
+        <activity
+            android:name="com.example.myhealthmateaapp.LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
 
-        </application>
+        <!-- SIGN UP -->
+        <activity
+            android:name="com.example.myhealthmateaapp.SignUpActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
 
-    </manifest>
+        <!-- FORGOT PASSWORD -->
+        <activity
+            android:name="com.example.myhealthmateaapp.ForgetPasswordActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <!-- RESET PASSWORD -->
+        <activity
+            android:name="com.example.myhealthmateaapp.ResetPasswordActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <!-- HOME -->
+        <activity
+            android:name="com.example.myhealthmateaapp.HomeActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.example.myhealthmateaapp.SymptomAnalyzerActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.example.myhealthmateaapp.AddMedicineActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.example.myhealthmateaapp.AppointmentActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.example.myhealthmateaapp.MedicalHistoryActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.example.myhealthmateaapp.MedicineExpiryActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+
+
+
+
+
+    </application>
+
+</manifest>
