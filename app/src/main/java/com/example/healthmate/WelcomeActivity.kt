@@ -28,9 +28,7 @@ class WelcomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            WelcomeBody()
-        }
+        setContent { WelcomeBody() }
     }
 }
 
@@ -41,119 +39,108 @@ fun WelcomeBody() {
     val context = LocalContext.current
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF0891B2),
-                        Color(0xFF06B6D4)
-                    )
-                )
-            )
+            modifier =
+                    Modifier.fillMaxSize()
+                            .background(
+                                    brush =
+                                            Brush.verticalGradient(
+                                                    colors =
+                                                            listOf(
+                                                                    Color(0xFF0891B2),
+                                                                    Color(0xFF06B6D4)
+                                                            )
+                                            )
+                            )
     ) {
         // Background image
         Image(
-            painter = painterResource(id = R.drawable.doctors),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            alpha = 0.3f
+                painter = painterResource(id = R.drawable.doctors),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.3f
         )
 
         // Main content card
         Card(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(32.dp)
-                .fillMaxWidth(0.9f),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFB3E5F5).copy(alpha = 0.9f)
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                modifier = Modifier.align(Alignment.Center).padding(32.dp).fillMaxWidth(0.9f),
+                shape = RoundedCornerShape(24.dp),
+                colors =
+                        CardDefaults.cardColors(
+                                containerColor = Color(0xFFB3E5F5).copy(alpha = 0.9f)
+                        ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
-                modifier = Modifier
-                    .padding(32.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
                 Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Health Mate Logo",
-                    modifier = Modifier.size(100.dp)
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "Health Mate Logo",
+                        modifier = Modifier.size(100.dp)
                 )
 
                 Text(
-                    text = "Welcome to Health Mate!",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
+                        text = "Welcome to Health Mate!",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
                 )
 
                 Text(
-                    text = "Your Health Companion",
-                    fontSize = 16.sp,
-                    color = Color(0xFF0E7490),
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium
+                        text = "Your Health Companion",
+                        fontSize = 16.sp,
+                        color = Color(0xFF0E7490),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // ✅ Login Button
                 Button(
-                    onClick = {
-                        val intent = Intent(context, LoginActivity::class.java)
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2563EB)
-                    )
+                        onClick = {
+                            val intent = Intent(context, LoginActivity::class.java)
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
                 ) {
                     Text(
-                        text = "Login",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                            text = "Login",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
                     )
                 }
 
                 // ✅ Sign Up Button
                 Button(
-                    onClick = {
-                        val intent = Intent(context, SignupActivity::class.java)
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF22C55E)
-                    )
+                        onClick = {
+                            val intent = Intent(context, SignUpActivity::class.java)
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E))
                 ) {
                     Text(
-                        text = "Sign Up",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                            text = "Sign Up",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
                     )
                 }
 
                 Text(
-                    text = "Manage your health with ease",
-                    fontSize = 14.sp,
-                    color = Color(0xFF0E7490).copy(alpha = 0.8f),
-                    textAlign = TextAlign.Center
+                        text = "Manage your health with ease",
+                        fontSize = 14.sp,
+                        color = Color(0xFF0E7490).copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center
                 )
             }
         }

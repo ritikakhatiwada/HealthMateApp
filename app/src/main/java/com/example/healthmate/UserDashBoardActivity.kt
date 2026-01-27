@@ -5,183 +5,171 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.healthmate.auth.FirebaseAuthHelper
+import com.example.healthmate.ui.components.HealthMateTopBar
+import com.example.healthmate.ui.screens.*
 import com.example.healthmate.ui.theme.HealthMateTheme
-import com.example.healthmate.ui.theme.Purple40
+import com.example.healthmate.util.ThemeManager
 
 class UserDashBoardActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            HealthMateTheme {
-                UserDashboardScreen()
-            }
+        override fun onCreate(savedInstanceState: Bundle?) {
+                super.onCreate(savedInstanceState)
+                enableEdgeToEdge()
+                setContent {
+                        val themeManager = ThemeManager(this)
+                        val isDarkMode by themeManager.isDarkMode.collectAsState(initial = false)
+
+                        HealthMateTheme(darkTheme = isDarkMode) { UserDashboardScreen() }
+                }
         }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserDashboardScreen() {
-    val context = LocalContext.current
+        val context = LocalContext.current
+        var selectedTab by remember { mutableStateOf(0) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "HealthMate Dashboard",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+        Scaffold(
+                topBar = {
+                        HealthMateTopBar(
+                                title =
+                                        when (selectedTab) {
+                                                0 -> "Home"
+                                                1 -> "Appointments"
+                                                2 -> "AI Chat"
+                                                3 -> "Reminders"
+                                                4 -> "Settings"
+                                                else -> "HealthMate"
+                                        }
+                        )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Purple40
-                )
-            )
-        },
-        floatingActionButton = {
-            // Chatbot FAB at bottom right
-            FloatingActionButton(
-                onClick = {
-                    val intent = Intent(context, ChatbotActivity::class.java)
-                    context.startActivity(intent)
-                },
-                modifier = Modifier
-                    .padding(16.dp),
-                containerColor = Purple40,
-                shape = CircleShape
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Chat,
-                    contentDescription = "Open AI Health Assistant",
-                    tint = Color.White
-                )
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color.White)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Welcome section
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Purple40.copy(alpha = 0.1f)
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Welcome to HealthMate!",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Purple40
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Your Health Companion",
-                            fontSize = 16.sp,
-                            color = Color.Gray
-                        )
-                    }
-                }
-
-                // Dashboard content placeholder
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp)
-                    ) {
-                        Text(
-                            text = "Dashboard Features",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Your dashboard content will appear here.",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Info card about chatbot
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Purple40.copy(alpha = 0.05f)
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Chat,
-                            contentDescription = null,
-                            tint = Purple40,
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "AI Health Assistant",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "Tap the chat icon to get health advice",
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
+                bottomBar = {
+                        NavigationBar(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = MaterialTheme.colorScheme.onSurface
+                        ) {
+                                NavigationBarItem(
+                                        selected = selectedTab == 0,
+                                        onClick = { selectedTab = 0 },
+                                        icon = { Icon(Icons.Default.Home, "Home") },
+                                        label = { Text("Home") },
+                                        colors =
+                                                NavigationBarItemDefaults.colors(
+                                                        selectedIconColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        selectedTextColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        indicatorColor =
+                                                                MaterialTheme.colorScheme
+                                                                        .primaryContainer
+                                                )
+                                )
+                                NavigationBarItem(
+                                        selected = selectedTab == 1,
+                                        onClick = { selectedTab = 1 },
+                                        icon = {
+                                                Icon(Icons.Default.CalendarMonth, "Appointments")
+                                        },
+                                        label = { Text("Appts") },
+                                        colors =
+                                                NavigationBarItemDefaults.colors(
+                                                        selectedIconColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        selectedTextColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        indicatorColor =
+                                                                MaterialTheme.colorScheme
+                                                                        .primaryContainer
+                                                )
+                                )
+                                NavigationBarItem(
+                                        selected = selectedTab == 2,
+                                        onClick = { selectedTab = 2 },
+                                        icon = { Icon(Icons.Default.SmartToy, "Chat") },
+                                        label = { Text("AI Chat") },
+                                        colors =
+                                                NavigationBarItemDefaults.colors(
+                                                        selectedIconColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        selectedTextColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        indicatorColor =
+                                                                MaterialTheme.colorScheme
+                                                                        .primaryContainer
+                                                )
+                                )
+                                NavigationBarItem(
+                                        selected = selectedTab == 3,
+                                        onClick = { selectedTab = 3 },
+                                        icon = { Icon(Icons.Default.Alarm, "Reminders") },
+                                        label = { Text("Reminders") },
+                                        colors =
+                                                NavigationBarItemDefaults.colors(
+                                                        selectedIconColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        selectedTextColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        indicatorColor =
+                                                                MaterialTheme.colorScheme
+                                                                        .primaryContainer
+                                                )
+                                )
+                                NavigationBarItem(
+                                        selected = selectedTab == 4,
+                                        onClick = { selectedTab = 4 },
+                                        icon = { Icon(Icons.Default.Settings, "Settings") },
+                                        label = { Text("Settings") },
+                                        colors =
+                                                NavigationBarItemDefaults.colors(
+                                                        selectedIconColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        selectedTextColor =
+                                                                MaterialTheme.colorScheme.primary,
+                                                        indicatorColor =
+                                                                MaterialTheme.colorScheme
+                                                                        .primaryContainer
+                                                )
+                                )
                         }
-                    }
                 }
-            }
+        ) { padding ->
+                Box(modifier = Modifier.padding(padding)) {
+                        when (selectedTab) {
+                                0 ->
+                                        UserHomeScreen(
+                                                onNavigateToAppointments = { selectedTab = 1 },
+                                                onNavigateToRecords = { /* Navigate to Medical Records */
+                                                },
+                                                onNavigateToWellness = { /* Navigate to Articles */}
+                                        )
+                                1 -> UserAppointmentsScreen()
+                                2 -> UserChatScreen()
+                                3 -> UserRemindersScreen()
+                                4 ->
+                                        UserSettingsScreen(
+                                                onLogout = {
+                                                        FirebaseAuthHelper.logout()
+                                                        val intent =
+                                                                Intent(
+                                                                        context,
+                                                                        LoginActivity::class.java
+                                                                )
+                                                        intent.flags =
+                                                                Intent.FLAG_ACTIVITY_NEW_TASK or
+                                                                        Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                                        context.startActivity(intent)
+                                                }
+                                        )
+                        }
+                }
         }
-    }
 }
-
