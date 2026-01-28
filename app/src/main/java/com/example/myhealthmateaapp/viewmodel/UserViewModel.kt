@@ -5,7 +5,7 @@ package com.example.myhealthmateaapp.viewmodel
     import com.example.myhealthmateaapp.repository.UserRepo
     import kotlinx.coroutines.launch
 
-    abstract class UserViewModel(
+    abstract class kjUserViewModel(
         private val repo: UserRepo = UserViewModel()
     ) : ViewModel(), UserRepo {
 
