@@ -1,4 +1,4 @@
-package com.example.myhealthmateaapp
+package com.example.myhealthmateaapp.view
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -10,7 +10,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import java.util.concurrent.TimeUnit
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myhealthmateaapp.R
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.*
 

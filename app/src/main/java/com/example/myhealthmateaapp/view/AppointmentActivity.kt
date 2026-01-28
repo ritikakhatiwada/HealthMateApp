@@ -1,4 +1,4 @@
-package com.example.myhealthmateaapp
+package com.example.myhealthmateaapp.view
 
 
 

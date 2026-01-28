@@ -1,4 +1,4 @@
-package com.example.myhealthmateaapp
+package com.example.myhealthmateaapp.view
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +32,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -93,7 +93,7 @@ fun MedicalHistoryScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Default.ArrowBack, null, tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White)
                         }
                     },
                     actions = {
@@ -328,7 +328,7 @@ fun getCategoryIcon(category: MedicalRecordCategory): ImageVector =
         MedicalRecordCategory.LAB -> Icons.Default.Science
         MedicalRecordCategory.PRESCRIPTION -> Icons.Default.Description
         MedicalRecordCategory.SURGERY -> Icons.Default.LocalHospital
-        else -> Icons.Default.Note
+        else -> Icons.Default.Description
     }
 
 

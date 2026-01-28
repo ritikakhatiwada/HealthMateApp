@@ -1,5 +1,6 @@
-package com.example.myhealthmateaapp
+package com.example.myhealthmateaapp.view
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -155,12 +156,12 @@ fun HospitalLocatorScreen(onBackClick: () -> Unit) {
                 modifier = Modifier.padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                FilterChip(
+                HospitalFilterChip(
                     text = "All Hospitals (${hospitals.size})",
                     isSelected = selectedFilter == "All"
                 ) { selectedFilter = "All" }
 
-                FilterChip(
+                HospitalFilterChip(
                     text = "Emergency Only",
                     isSelected = selectedFilter == "Emergency"
                 ) { selectedFilter = "Emergency" }
@@ -184,12 +185,12 @@ fun HospitalLocatorScreen(onBackClick: () -> Unit) {
 // ============================================================
 
 @Composable
-fun FilterChip(text: String, isSelected: Boolean, onClick: () -> Unit) {
+fun HospitalFilterChip(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         color = if (isSelected) Color(0xFFD32F2F) else Color.White,
         shape = RoundedCornerShape(20.dp),
-        border = if (!isSelected) ButtonDefaults.outlinedButtonBorder else null
+        border = if (!isSelected) BorderStroke(1.dp, Color.Gray) else null
     ) {
         Text(
             text,

@@ -9,7 +9,7 @@
 
         <!-- 🚀 LAUNCHER -->
         <activity
-            android:name="com.example.myhealthmateaapp.SplashActivity"
+            android:name="com.example.myhealthmateaapp.view.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -19,7 +19,7 @@
 
         <!-- WELCOME -->
         <activity
-            android:name="com.example.myhealthmateaapp.WelcomeActivity"
+            android:name="com.example.myhealthmateaapp.view.WelcomeActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -29,7 +29,7 @@
 
         <!-- LOGIN -->
         <activity
-            android:name="com.example.myhealthmateaapp.LoginActivity"
+            android:name="com.example.myhealthmateaapp.view.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -39,7 +39,7 @@
 
         <!-- SIGN UP -->
         <activity
-            android:name="com.example.myhealthmateaapp.SignUpActivity"
+            android:name="com.example.myhealthmateaapp.view.SignUpActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -49,7 +49,7 @@
 
         <!-- FORGOT PASSWORD -->
         <activity
-            android:name="com.example.myhealthmateaapp.ForgetPasswordActivity"
+            android:name="com.example.myhealthmateaapp.view.ForgetPasswordActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -59,7 +59,7 @@
 
         <!-- RESET PASSWORD -->
         <activity
-            android:name="com.example.myhealthmateaapp.ResetPasswordActivity"
+            android:name="com.example.myhealthmateaapp.view.ResetPasswordActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -69,7 +69,7 @@
 
         <!-- HOME -->
         <activity
-            android:name="com.example.myhealthmateaapp.HomeActivity"
+            android:name="com.example.myhealthmateaapp.view.HomeActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -77,7 +77,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.myhealthmateaapp.SymptomAnalyzerActivity"
+            android:name="com.example.myhealthmateaapp.view.SymptomAnalyzerActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -85,7 +85,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.myhealthmateaapp.AddMedicineActivity"
+            android:name="com.example.myhealthmateaapp.view.AddMedicineActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -93,7 +93,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.myhealthmateaapp.AppointmentActivity"
+            android:name="com.example.myhealthmateaapp.view.AppointmentActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -101,7 +101,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.myhealthmateaapp.MedicalHistoryActivity"
+            android:name="com.example.myhealthmateaapp.view.MedicalHistoryActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -109,7 +109,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.myhealthmateaapp.MedicineExpiryActivity"
+            android:name="com.example.myhealthmateaapp.view.MedicineExpiryActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -117,8 +117,14 @@
             </intent-filter>
         </activity>
 
-
-
+        <activity
+            android:name="com.example.myhealthmateaapp.view.HospitalLocatorActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
 
 
 

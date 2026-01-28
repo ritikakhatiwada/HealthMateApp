@@ -1,4 +1,4 @@
-package com.example.myhealthmateaapp
+package com.example.myhealthmateaapp.view
 
 
 
@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.example.myhealthmateaapp.ui.theme.MyHealthMateaAppTheme
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.abs
 
 class MedicineExpiryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +43,7 @@ class MedicineExpiryActivity : ComponentActivity() {
 }
 
 // Data Models
-data class Medicine(
+data class MedicineItem(
     val id: Long,
     val name: String,
     val quantity: String,
@@ -139,7 +141,7 @@ fun MedicineTopAppBar() {
 
 // Dashboard Summary
 @Composable
-fun DashboardSummary(medicines: List<Medicine>) {
+fun DashboardSummary(medicines: List<MedicineItem>) {
     val totalCount = medicines.size
     val expiringSoonCount = medicines.count { it.status == ExpiryStatus.EXPIRING_SOON }
     val expiredCount = medicines.count { it.status == ExpiryStatus.EXPIRED }
@@ -187,7 +189,7 @@ private fun SummaryItem(label: String, count: String, color: Color) {
 // Medicine Card
 @Composable
 fun MedicineCard(
-    medicine: Medicine,
+    medicine: MedicineItem,
     onDelete: () -> Unit
 ) {
     val (backgroundColor, borderColor) = when (medicine.status) {
@@ -300,7 +302,7 @@ private fun StatusBadge(status: ExpiryStatus) {
 
 @Composable
 private fun InfoRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     text: String,
     isBold: Boolean = false
 ) {
@@ -328,7 +330,7 @@ private fun InfoRow(
 @Composable
 fun AddMedicineDialog(
     onDismiss: () -> Unit,
-    onAdd: (Medicine) -> Unit
+    onAdd: (MedicineItem) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
@@ -407,7 +409,7 @@ fun AddMedicineDialog(
                             else -> ExpiryStatus.GOOD
                         }
 
-                        val newMedicine = Medicine(
+                        val newMedicine = MedicineItem(
                             id = System.currentTimeMillis(),
                             name = name,
                             quantity = quantity,
@@ -445,17 +447,17 @@ fun getExpiryMessage(expiryTimestamp: Long): String {
     val diffDays = ((expiryTimestamp - today) / (1000 * 60 * 60 * 24)).toInt()
 
     return when {
-        diffDays < 0 -> "Expired ${kotlin.math.abs(diffDays)} days ago"
+        diffDays < 0 -> "Expired ${abs(diffDays)} days ago"
         else -> "$diffDays days remaining"
     }
 }
 
 // Sample Data
-fun getSampleMedicines(): List<Medicine> {
+fun getSampleMedicines(): List<MedicineItem> {
     val calendar = Calendar.getInstance()
 
     return listOf(
-        Medicine(
+        MedicineItem(
             id = 1,
             name = "Cough Syrup",
             quantity = "200ml bottle",
@@ -467,7 +469,7 @@ fun getSampleMedicines(): List<Medicine> {
             location = "Medicine Cabinet",
             status = ExpiryStatus.EXPIRED
         ),
-        Medicine(
+        MedicineItem(
             id = 2,
             name = "Ibuprofen",
             quantity = "50 tablets",
@@ -479,7 +481,7 @@ fun getSampleMedicines(): List<Medicine> {
             location = "Kitchen Counter",
             status = ExpiryStatus.EXPIRING_SOON
         ),
-        Medicine(
+        MedicineItem(
             id = 3,
             name = "Vitamin D",
             quantity = "60 capsules",
@@ -491,7 +493,7 @@ fun getSampleMedicines(): List<Medicine> {
             location = "Refrigerator",
             status = ExpiryStatus.GOOD
         ),
-        Medicine(
+        MedicineItem(
             id = 4,
             name = "Bandages",
             quantity = "20 count",
@@ -503,7 +505,7 @@ fun getSampleMedicines(): List<Medicine> {
             location = "Medicine Cabinet",
             status = ExpiryStatus.GOOD
         ),
-        Medicine(
+        MedicineItem(
             id = 5,
             name = "Antibiotic Cream",
             quantity = "30g tube",

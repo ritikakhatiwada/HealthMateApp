@@ -1,4 +1,4 @@
-package com.example.myhealthmateaapp
+package com.example.myhealthmateaapp.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -182,7 +182,7 @@ fun AddMedicineScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
                 )
 
                 ExposedDropdownMenu(
