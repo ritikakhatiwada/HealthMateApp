@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -57,13 +58,63 @@ fun UserHomeScreen(
 
         LaunchedEffect(Unit) {
                 scope.launch {
+                        android.util.Log.d("UserHomeScreen", "========================================")
+                        android.util.Log.d("UserHomeScreen", "Loading User Dashboard")
+                        android.util.Log.d("UserHomeScreen", "========================================")
+
+                        // Auto-update appointment statuses first
+                        android.util.Log.d("UserHomeScreen", "Running auto-update appointment statuses...")
+                        FirestoreHelper.autoUpdateAppointmentStatuses()
+
                         val userId = FirebaseAuthHelper.getCurrentUserId()
+                        android.util.Log.d("UserHomeScreen", "Current User ID: $userId")
+
                         val user = FirestoreHelper.getUserById(userId)
                         userName = user?.name ?: ""
-                        appointments = FirestoreHelper.getUserAppointments(userId).take(3)
+                        android.util.Log.d("UserHomeScreen", "User Name: $userName")
+
+                        // Get all appointments and filter for upcoming only
+                        val allAppointments = FirestoreHelper.getUserAppointments(userId)
+                        android.util.Log.d("UserHomeScreen", "Total appointments fetched: ${allAppointments.size}")
+
+                        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                                .format(java.util.Date())
+                        android.util.Log.d("UserHomeScreen", "Today's date: $today")
+
+                        // Log each appointment
+                        allAppointments.forEachIndexed { index, app ->
+                                android.util.Log.d("UserHomeScreen", "Appointment #$index:")
+                                android.util.Log.d("UserHomeScreen", "  - ID: ${app.id}")
+                                android.util.Log.d("UserHomeScreen", "  - Doctor: ${app.doctorName}")
+                                android.util.Log.d("UserHomeScreen", "  - Date: ${app.date}")
+                                android.util.Log.d("UserHomeScreen", "  - Time: ${app.time}")
+                                android.util.Log.d("UserHomeScreen", "  - Status: ${app.status}")
+                                android.util.Log.d("UserHomeScreen", "  - Date >= Today: ${app.date >= today}")
+                                android.util.Log.d("UserHomeScreen", "  - Is CONFIRMED: ${app.status.equals("CONFIRMED", ignoreCase = true)}")
+                        }
+
+                        appointments = allAppointments.filter { appointment ->
+                                val isConfirmed = appointment.status.equals("CONFIRMED", ignoreCase = true)
+                                val isFutureOrToday = appointment.date >= today
+                                val shouldShow = isConfirmed && isFutureOrToday
+
+                                android.util.Log.d("UserHomeScreen", "Filtering appointment with ${appointment.doctorName}: isConfirmed=$isConfirmed, isFutureOrToday=$isFutureOrToday, shouldShow=$shouldShow")
+
+                                shouldShow
+                        }.take(3)
+
+                        android.util.Log.d("UserHomeScreen", "Filtered upcoming appointments: ${appointments.size}")
+                        appointments.forEach { app ->
+                                android.util.Log.d("UserHomeScreen", "  - Showing: ${app.doctorName} on ${app.date}")
+                        }
+
                         records = FirestoreHelper.getUserMedicalRecords(userId).take(3)
                         articles = FirestoreHelper.getWellnessResources().take(3)
                         isLoading = false
+
+                        android.util.Log.d("UserHomeScreen", "========================================")
+                        android.util.Log.d("UserHomeScreen", "Dashboard Loading Complete")
+                        android.util.Log.d("UserHomeScreen", "========================================")
                 }
         }
 
@@ -123,7 +174,23 @@ fun UserHomeScreen(
                         }
                 } else {
                         items(appointments) { appointment ->
-                                AppointmentCard(appointment = appointment)
+                                AppointmentCard(
+                                        appointment = appointment,
+                                        onCancelled = {
+                                                // Refresh appointments list
+                                                scope.launch {
+                                                        val userId = FirebaseAuthHelper.getCurrentUserId()
+                                                        val allAppointments = FirestoreHelper.getUserAppointments(userId)
+                                                        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                                                                .format(java.util.Date())
+
+                                                        appointments = allAppointments.filter { app ->
+                                                                app.status.equals("CONFIRMED", ignoreCase = true) &&
+                                                                app.date >= today
+                                                        }.take(3)
+                                                }
+                                        }
+                                )
                         }
                 }
 
@@ -333,46 +400,123 @@ fun EmptyStateCard(icon: ImageVector, message: String) {
 }
 
 @Composable
-fun AppointmentCard(appointment: Appointment) {
+fun AppointmentCard(appointment: Appointment, onCancelled: () -> Unit = {}) {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+        var showCancelDialog by remember { mutableStateOf(false) }
+
         Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-                Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                ) {
-                        Box(
-                                modifier =
-                                        Modifier.size(48.dp)
-                                                .background(
-                                                        MaterialTheme.colorScheme.primaryContainer,
-                                                        RoundedCornerShape(12.dp)
-                                                ),
-                                contentAlignment = Alignment.Center
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                        Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
                         ) {
-                                Icon(
-                                        imageVector = Icons.Default.CalendarMonth,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                )
+                                Box(
+                                        modifier =
+                                                Modifier.size(48.dp)
+                                                        .background(
+                                                                MaterialTheme.colorScheme.primaryContainer,
+                                                                RoundedCornerShape(12.dp)
+                                                        ),
+                                        contentAlignment = Alignment.Center
+                                ) {
+                                        Icon(
+                                                imageVector = Icons.Default.CalendarMonth,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary
+                                        )
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                                text = appointment.doctorName,
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                                text = "${appointment.date} • ${appointment.time}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                }
+                                StatusChip(status = appointment.status)
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                        text = appointment.doctorName,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                        text = "${appointment.date} • ${appointment.time}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+
+                        // Show cancel button only for CONFIRMED appointments
+                        if (appointment.status.equals("CONFIRMED", ignoreCase = true)) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedButton(
+                                        onClick = { showCancelDialog = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                                contentColor = Color(0xFFE53935)
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                ) {
+                                        Icon(
+                                                Icons.Default.Cancel,
+                                                contentDescription = "Cancel",
+                                                modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Cancel", style = MaterialTheme.typography.labelMedium)
+                                }
                         }
-                        StatusChip(status = appointment.status)
                 }
+        }
+
+        if (showCancelDialog) {
+                AlertDialog(
+                        onDismissRequest = { showCancelDialog = false },
+                        title = { Text("Cancel Appointment") },
+                        text = {
+                                Text("Are you sure you want to cancel this appointment with ${appointment.doctorName}?")
+                        },
+                        confirmButton = {
+                                Button(
+                                        onClick = {
+                                                scope.launch {
+                                                        val result = FirestoreHelper.cancelAppointment(
+                                                                appointment.id,
+                                                                appointment.slotId
+                                                        )
+                                                        result.fold(
+                                                                onSuccess = {
+                                                                        Toast.makeText(
+                                                                                context,
+                                                                                "Appointment cancelled",
+                                                                                Toast.LENGTH_SHORT
+                                                                        ).show()
+                                                                        showCancelDialog = false
+                                                                        onCancelled()
+                                                                },
+                                                                onFailure = { e ->
+                                                                        Toast.makeText(
+                                                                                context,
+                                                                                "Error: ${e.message}",
+                                                                                Toast.LENGTH_SHORT
+                                                                        ).show()
+                                                                }
+                                                        )
+                                                }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFFE53935)
+                                        )
+                                ) {
+                                        Text("Yes, Cancel")
+                                }
+                        },
+                        dismissButton = {
+                                TextButton(onClick = { showCancelDialog = false }) {
+                                        Text("Keep")
+                                }
+                        }
+                )
         }
 }
 
@@ -383,6 +527,7 @@ fun StatusChip(status: String) {
                         "CONFIRMED" ->
                                 MaterialTheme.colorScheme.primaryContainer to
                                         MaterialTheme.colorScheme.primary
+                        "COMPLETED" -> Color(0xFFE8F5E9) to Color(0xFF4CAF50)
                         "PENDING" -> Color(0xFFFFF3E0) to Color(0xFFFF9800)
                         "CANCELLED" -> Color(0xFFFFEBEE) to Color(0xFFE53935)
                         else ->
@@ -395,7 +540,8 @@ fun StatusChip(status: String) {
                         text = status,
                         style = MaterialTheme.typography.labelSmall,
                         color = textColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                 )
         }
 }
