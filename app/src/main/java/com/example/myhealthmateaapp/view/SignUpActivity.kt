@@ -1,8 +1,9 @@
-package com.example.myhealthmateaapp
+package com.example.myhealthmateaapp.view
 
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myhealthmateaapp.R
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.*
 import com.google.firebase.firestore.FirebaseFirestore
@@ -403,7 +405,7 @@ fun SignupScreen(
                                 return@Button
                             }
 
-                            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailOrPhone).matches()) {
+                            if (!Patterns.EMAIL_ADDRESS.matcher(emailOrPhone).matches()) {
                                 message = "Please enter a valid email"
                                 isProcessing = false
                                 return@Button
