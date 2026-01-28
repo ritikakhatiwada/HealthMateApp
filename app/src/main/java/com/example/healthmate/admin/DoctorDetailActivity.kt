@@ -24,11 +24,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.*
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.Doctor
 import com.example.healthmate.model.Slot
 import com.example.healthmate.ui.theme.HealthMateTheme
 import com.example.healthmate.util.ThemeManager
+import com.example.healthmate.util.FirestoreMigration
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -72,6 +75,9 @@ fun DoctorDetailScreen(doctorId: String, onBack: () -> Unit) {
 
         LaunchedEffect(doctorId) {
                 scope.launch {
+                        // Run migration first to ensure old slots work
+                        FirestoreMigration.migrateSlotFields()
+
                         doctor = FirestoreHelper.getDoctorById(doctorId)
                         doctor?.let {
                                 name = it.name
@@ -394,16 +400,32 @@ fun DoctorDetailScreen(doctorId: String, onBack: () -> Unit) {
                                                                                 onClick = {
                                                                                         scope
                                                                                                 .launch {
-                                                                                                        FirestoreHelper
+                                                                                                        val result = FirestoreHelper
                                                                                                                 .deleteSlot(
                                                                                                                         slot.id
                                                                                                                 )
-                                                                                                        // Refresh slots
-                                                                                                        slots =
-                                                                                                                FirestoreHelper
-                                                                                                                        .getSlotsByDoctor(
-                                                                                                                                doctorId
-                                                                                                                        )
+                                                                                                        result.fold(
+                                                                                                                onSuccess = {
+                                                                                                                        // Refresh slots
+                                                                                                                        slots =
+                                                                                                                                FirestoreHelper
+                                                                                                                                        .getSlotsByDoctor(
+                                                                                                                                                doctorId
+                                                                                                                                        )
+                                                                                                                        Toast.makeText(
+                                                                                                                                context,
+                                                                                                                                "Slot deleted",
+                                                                                                                                Toast.LENGTH_SHORT
+                                                                                                                        ).show()
+                                                                                                                },
+                                                                                                                onFailure = { e ->
+                                                                                                                        Toast.makeText(
+                                                                                                                                context,
+                                                                                                                                "Error: ${e.message}",
+                                                                                                                                Toast.LENGTH_SHORT
+                                                                                                                        ).show()
+                                                                                                                }
+                                                                                                        )
                                                                                                 }
                                                                                 }
                                                                         ) {
@@ -425,70 +447,227 @@ fun DoctorDetailScreen(doctorId: String, onBack: () -> Unit) {
         }
 
         if (showAddSlotDialog) {
-                var date by remember { mutableStateOf("") }
-                var time by remember { mutableStateOf("") }
-
-                AlertDialog(
-                        onDismissRequest = { showAddSlotDialog = false },
-                        title = { Text("Add Slot") },
-                        text = {
-                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                        OutlinedTextField(
-                                                value = date,
-                                                onValueChange = { date = it },
-                                                label = { Text("Date (YYYY-MM-DD)") },
-                                                placeholder = { Text("2024-03-25") },
-                                                singleLine = true
-                                        )
-                                        OutlinedTextField(
-                                                value = time,
-                                                onValueChange = { time = it },
-                                                label = { Text("Time (e.g. 10:00 - 11:00)") },
-                                                placeholder = { Text("10:00 - 11:00") },
-                                                singleLine = true
-                                        )
+                AddSlotDialog(
+                        doctorId = doctorId,
+                        doctorName = name,
+                        onDismiss = { showAddSlotDialog = false },
+                        onSlotAdded = {
+                                scope.launch {
+                                        slots = FirestoreHelper.getSlotsByDoctor(doctorId)
                                 }
-                        },
-                        confirmButton = {
-                                Button(
-                                        onClick = {
-                                                if (date.isNotBlank() && time.isNotBlank()) {
-                                                        scope.launch {
-                                                                val newSlot =
-                                                                        com.example.healthmate.model
-                                                                                .Slot(
-                                                                                        doctorId =
-                                                                                                doctorId,
-                                                                                        doctorName =
-                                                                                                name, // Use current name
-                                                                                        date = date,
-                                                                                        time = time,
-                                                                                        isBooked =
-                                                                                                false
-                                                                                )
-                                                                FirestoreHelper.addSlot(newSlot)
-                                                                showAddSlotDialog = false
-                                                                slots =
-                                                                        FirestoreHelper
-                                                                                .getSlotsByDoctor(
-                                                                                        doctorId
-                                                                                )
-                                                                Toast.makeText(
-                                                                                context,
-                                                                                "Slot added!",
-                                                                                Toast.LENGTH_SHORT
-                                                                        )
-                                                                        .show()
-                                                        }
-                                                }
-                                        }
-                                ) { Text("Add") }
-                        },
-                        dismissButton = {
-                                TextButton(onClick = { showAddSlotDialog = false }) {
-                                        Text("Cancel")
-                                }
+                                showAddSlotDialog = false
                         }
                 )
         }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddSlotDialog(
+        doctorId: String,
+        doctorName: String,
+        onDismiss: () -> Unit,
+        onSlotAdded: () -> Unit
+) {
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+
+        var selectedDate by remember { mutableStateOf("") }
+        var selectedStartHour by remember { mutableStateOf(9) }
+        var selectedStartMinute by remember { mutableStateOf(0) }
+        var selectedEndHour by remember { mutableStateOf(10) }
+        var selectedEndMinute by remember { mutableStateOf(0) }
+        var showDatePicker by remember { mutableStateOf(false) }
+        var showStartTimePicker by remember { mutableStateOf(false) }
+        var showEndTimePicker by remember { mutableStateOf(false) }
+
+        val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = System.currentTimeMillis()
+        )
+
+        AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text("Add Slot") },
+                text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                // Date Picker Button
+                                OutlinedButton(
+                                        onClick = { showDatePicker = true },
+                                        modifier = Modifier.fillMaxWidth()
+                                ) {
+                                        Text(
+                                                text = if (selectedDate.isEmpty())
+                                                        "Select Date"
+                                                else "Date: $selectedDate"
+                                        )
+                                }
+
+                                // Start Time Picker Button
+                                OutlinedButton(
+                                        onClick = { showStartTimePicker = true },
+                                        modifier = Modifier.fillMaxWidth()
+                                ) {
+                                        Text("Start Time: ${String.format("%02d:%02d", selectedStartHour, selectedStartMinute)}")
+                                }
+
+                                // End Time Picker Button
+                                OutlinedButton(
+                                        onClick = { showEndTimePicker = true },
+                                        modifier = Modifier.fillMaxWidth()
+                                ) {
+                                        Text("End Time: ${String.format("%02d:%02d", selectedEndHour, selectedEndMinute)}")
+                                }
+
+                                if (selectedDate.isNotEmpty()) {
+                                        Text(
+                                                text = "Slot: $selectedDate at ${String.format("%02d:%02d", selectedStartHour, selectedStartMinute)} - ${String.format("%02d:%02d", selectedEndHour, selectedEndMinute)}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                }
+                        }
+                },
+                confirmButton = {
+                        Button(
+                                onClick = {
+                                        if (selectedDate.isNotEmpty()) {
+                                                val timeRange = "${String.format("%02d:%02d", selectedStartHour, selectedStartMinute)} - ${String.format("%02d:%02d", selectedEndHour, selectedEndMinute)}"
+                                                scope.launch {
+                                                        val newSlot = Slot(
+                                                                doctorId = doctorId,
+                                                                doctorName = doctorName,
+                                                                date = selectedDate,
+                                                                time = timeRange,
+                                                                isBooked = false
+                                                        )
+                                                        val result = FirestoreHelper.addSlot(newSlot)
+                                                        result.fold(
+                                                                onSuccess = {
+                                                                        Toast.makeText(
+                                                                                context,
+                                                                                "Slot added successfully!",
+                                                                                Toast.LENGTH_SHORT
+                                                                        ).show()
+                                                                        onSlotAdded()
+                                                                },
+                                                                onFailure = { e ->
+                                                                        Toast.makeText(
+                                                                                context,
+                                                                                "Error: ${e.message}",
+                                                                                Toast.LENGTH_SHORT
+                                                                        ).show()
+                                                                }
+                                                        )
+                                                }
+                                        } else {
+                                                Toast.makeText(
+                                                        context,
+                                                        "Please select a date",
+                                                        Toast.LENGTH_SHORT
+                                                ).show()
+                                        }
+                                },
+                                enabled = selectedDate.isNotEmpty()
+                        ) { Text("Add") }
+                },
+                dismissButton = {
+                        TextButton(onClick = onDismiss) {
+                                Text("Cancel")
+                        }
+                }
+        )
+
+        // Date Picker Dialog
+        if (showDatePicker) {
+                DatePickerDialog(
+                        onDismissRequest = { showDatePicker = false },
+                        confirmButton = {
+                                TextButton(
+                                        onClick = {
+                                                datePickerState.selectedDateMillis?.let { millis ->
+                                                        val calendar = Calendar.getInstance().apply {
+                                                                timeInMillis = millis
+                                                        }
+                                                        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                                        selectedDate = dateFormat.format(calendar.time)
+                                                }
+                                                showDatePicker = false
+                                        }
+                                ) { Text("OK") }
+                        },
+                        dismissButton = {
+                                TextButton(onClick = { showDatePicker = false }) {
+                                        Text("Cancel")
+                                }
+                        }
+                ) {
+                        DatePicker(state = datePickerState)
+                }
+        }
+
+        // Start Time Picker Dialog
+        if (showStartTimePicker) {
+                TimePickerDialog(
+                        onDismiss = { showStartTimePicker = false },
+                        onConfirm = { hour, minute ->
+                                selectedStartHour = hour
+                                selectedStartMinute = minute
+                                showStartTimePicker = false
+                        },
+                        initialHour = selectedStartHour,
+                        initialMinute = selectedStartMinute,
+                        title = "Select Start Time"
+                )
+        }
+
+        // End Time Picker Dialog
+        if (showEndTimePicker) {
+                TimePickerDialog(
+                        onDismiss = { showEndTimePicker = false },
+                        onConfirm = { hour, minute ->
+                                selectedEndHour = hour
+                                selectedEndMinute = minute
+                                showEndTimePicker = false
+                        },
+                        initialHour = selectedEndHour,
+                        initialMinute = selectedEndMinute,
+                        title = "Select End Time"
+                )
+        }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimePickerDialog(
+        onDismiss: () -> Unit,
+        onConfirm: (hour: Int, minute: Int) -> Unit,
+        initialHour: Int,
+        initialMinute: Int,
+        title: String
+) {
+        val timePickerState = rememberTimePickerState(
+                initialHour = initialHour,
+                initialMinute = initialMinute,
+                is24Hour = false
+        )
+
+        AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text(title) },
+                text = {
+                        TimePicker(state = timePickerState)
+                },
+                confirmButton = {
+                        TextButton(
+                                onClick = {
+                                        onConfirm(timePickerState.hour, timePickerState.minute)
+                                }
+                        ) { Text("OK") }
+                },
+                dismissButton = {
+                        TextButton(onClick = onDismiss) {
+                                Text("Cancel")
+                        }
+                }
+        )
 }

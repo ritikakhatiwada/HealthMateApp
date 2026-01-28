@@ -42,14 +42,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.healthmate.R
 
 class ResetPasswordActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            ResetPasswordBody()
-        }
+        setContent { ResetPasswordBody() }
     }
 }
 
@@ -66,19 +65,22 @@ fun ResetPasswordBody() {
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.background),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+                painter = painterResource(id = R.drawable.background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
         )
 
         Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(20.dp))
-                .padding(20.dp)
-                .fillMaxWidth(0.9f),
-            horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                        Modifier.align(Alignment.Center)
+                                .background(
+                                        Color.White.copy(alpha = 0.9f),
+                                        RoundedCornerShape(20.dp)
+                                )
+                                .padding(20.dp)
+                                .fillMaxWidth(0.9f),
+                horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("Reset Password", fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
@@ -87,111 +89,124 @@ fun ResetPasswordBody() {
 
             // Email Input
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
             // OTP Input
             OutlinedTextField(
-                value = otp,
-                onValueChange = { otp = it },
-                label = { Text("OTP") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                    value = otp,
+                    onValueChange = { otp = it },
+                    label = { Text("OTP") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
             // New Password Input
             OutlinedTextField(
-                value = newPassword,
-                onValueChange = { newPassword = it },
-                label = { Text("New Password") },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            painter = painterResource(
-                                if (passwordVisible) R.drawable.baseline_visibility_24
-                                else R.drawable.baseline_visibility_off_24
-                            ),
-                            contentDescription = null
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                    value = newPassword,
+                    onValueChange = { newPassword = it },
+                    label = { Text("New Password") },
+                    visualTransformation =
+                            if (passwordVisible) VisualTransformation.None
+                            else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                    painter =
+                                            painterResource(
+                                                    if (passwordVisible)
+                                                            R.drawable.baseline_visibility_24
+                                                    else R.drawable.baseline_visibility_off_24
+                                            ),
+                                    contentDescription = null
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
             // Confirm Password Input
             OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                label = { Text("Confirm Password") },
-                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                        Icon(
-                            painter = painterResource(
-                                if (confirmPasswordVisible) R.drawable.baseline_visibility_24
-                                else R.drawable.baseline_visibility_off_24
-                            ),
-                            contentDescription = null
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirm Password") },
+                    visualTransformation =
+                            if (confirmPasswordVisible) VisualTransformation.None
+                            else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                            Icon(
+                                    painter =
+                                            painterResource(
+                                                    if (confirmPasswordVisible)
+                                                            R.drawable.baseline_visibility_24
+                                                    else R.drawable.baseline_visibility_off_24
+                                            ),
+                                    contentDescription = null
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Reset Button
             Button(
-                onClick = {
-                    if (email.isBlank() || otp.isBlank() || newPassword.isBlank()) {
-                        Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT).show()
-                    } else if (newPassword != confirmPassword) {
-                        Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "Password reset successfully!", Toast.LENGTH_SHORT).show()
+                    onClick = {
+                        if (email.isBlank() || otp.isBlank() || newPassword.isBlank()) {
+                            Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT)
+                                    .show()
+                        } else if (newPassword != confirmPassword) {
+                            Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT)
+                                    .show()
+                        } else {
+                            Toast.makeText(
+                                            context,
+                                            "Password reset successfully!",
+                                            Toast.LENGTH_SHORT
+                                    )
+                                    .show()
 
-                        val intent = Intent(context, LoginActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        context.startActivity(intent)
+                            val intent = Intent(context, LoginActivity::class.java)
+                            intent.flags =
+                                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            context.startActivity(intent)
 
-                        // If context is an Activity, finish it
-                        (context as? ComponentActivity)?.finish()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
-            ) {
-                Text("Reset Password", color = Color.White)
-            }
+                            // If context is an Activity, finish it
+                            (context as? ComponentActivity)?.finish()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+            ) { Text("Reset Password", color = Color.White) }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Back to Login Link
             Text(
-                text = "Back to Login",
-                color = Color(0xFF1E88E5),
-                modifier = Modifier.clickable {
-                    context.startActivity(Intent(context, LoginActivity::class.java))
-                    (context as? ComponentActivity)?.finish()
-                }
+                    text = "Back to Login",
+                    color = Color(0xFF1E88E5),
+                    modifier =
+                            Modifier.clickable {
+                                context.startActivity(Intent(context, LoginActivity::class.java))
+                                (context as? ComponentActivity)?.finish()
+                            }
             )
         }
     }
