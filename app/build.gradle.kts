@@ -25,6 +25,7 @@ val cloudinaryApiSecret = localProperties.getProperty("CLOUDINARY_API_SECRET") ?
 
 android {
     namespace = "com.example.healthmate"
+
     compileSdk = 36
 
     defaultConfig {
@@ -92,6 +93,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.google.generativeai)
+    implementation(libs.androidx.navigation.compose)
+
     
     // Firebase
     implementation(platform(libs.firebase.bom))

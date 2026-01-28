@@ -197,19 +197,17 @@
             android:name=".reminders.ReminderReceiver"
             android:exported="false" />
 
+        <!-- HOME -->
+        <activity android:name=".HomeActivity" />
+
+        <!-- FEATURES -->
+        <activity android:name=".AddMedicineActivity" />
+        <activity android:name=".MedicalHistoryActivity" />
+        <activity android:name=".MedicineExpiryActivity" />
+        <activity android:name=".AppointmentActivity" />
+        <activity android:name=".SymptomAnalyzerActivity" />
+        <activity android:name=".HospitalLocatorActivity" />
+
     </application>
 
-            <!-- HOME -->
-            <activity android:name=".HomeActivity" />
-
-            <!-- FEATURES -->
-            <activity android:name=".AddMedicineActivity" />
-            <activity android:name=".MedicalHistoryActivity" />
-            <activity android:name=".MedicineExpiryActivity" />
-            <activity android:name=".AppointmentActivity" />
-            <activity android:name=".SymptomAnalyzerActivity" />
-            <activity android:name=".HospitalLocatorActivity" />
-
-        </application>
-
-    </manifest>
+</manifest>
