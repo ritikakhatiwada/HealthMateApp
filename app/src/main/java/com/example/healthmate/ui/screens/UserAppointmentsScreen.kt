@@ -4,15 +4,20 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -21,10 +26,303 @@ import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.Appointment
 import com.example.healthmate.model.Doctor
 import com.example.healthmate.model.Slot
+import com.example.healthmate.util.FirestoreDiagnostic
+import com.example.healthmate.util.FirestoreMigration
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAppointmentsScreen() {
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("My Appointments", "Book New")
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        TabRow(selectedTabIndex = selectedTab) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = { Text(title) }
+                )
+            }
+        }
+
+        when (selectedTab) {
+            0 -> MyAppointmentsTab()
+            1 -> BookAppointmentTab()
+        }
+    }
+}
+
+@Composable
+fun MyAppointmentsTab() {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    var appointments by remember { mutableStateOf<List<Appointment>>(emptyList()) }
+    var filteredAppointments by remember { mutableStateOf<List<Appointment>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var selectedFilter by remember { mutableStateOf("All") }
+    val filters = listOf("All", "Upcoming", "Completed", "Cancelled")
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            android.util.Log.d("MyAppointments", "========================================")
+            android.util.Log.d("MyAppointments", "Loading My Appointments Tab")
+            android.util.Log.d("MyAppointments", "========================================")
+
+            // Auto-update appointment statuses first
+            android.util.Log.d("MyAppointments", "Running auto-update appointment statuses...")
+            val updateResult = FirestoreHelper.autoUpdateAppointmentStatuses()
+            updateResult.fold(
+                onSuccess = { count ->
+                    android.util.Log.d("MyAppointments", "Auto-updated $count appointments to COMPLETED")
+                },
+                onFailure = { e ->
+                    android.util.Log.e("MyAppointments", "Auto-update failed: ${e.message}")
+                }
+            )
+
+            val userId = FirebaseAuthHelper.getCurrentUserId()
+            android.util.Log.d("MyAppointments", "Current User ID: $userId")
+
+            appointments = FirestoreHelper.getUserAppointments(userId)
+            android.util.Log.d("MyAppointments", "Total appointments fetched: ${appointments.size}")
+
+            appointments.forEachIndexed { index, app ->
+                android.util.Log.d("MyAppointments", "Appointment #$index:")
+                android.util.Log.d("MyAppointments", "  - ID: ${app.id}")
+                android.util.Log.d("MyAppointments", "  - Patient ID: ${app.patientId}")
+                android.util.Log.d("MyAppointments", "  - Patient Name: ${app.patientName}")
+                android.util.Log.d("MyAppointments", "  - Doctor: ${app.doctorName}")
+                android.util.Log.d("MyAppointments", "  - Date: ${app.date}")
+                android.util.Log.d("MyAppointments", "  - Time: ${app.time}")
+                android.util.Log.d("MyAppointments", "  - Status: ${app.status}")
+                android.util.Log.d("MyAppointments", "  - Slot ID: ${app.slotId}")
+            }
+
+            filteredAppointments = appointments
+            android.util.Log.d("MyAppointments", "Initial filtered appointments: ${filteredAppointments.size}")
+
+            isLoading = false
+            android.util.Log.d("MyAppointments", "========================================")
+            android.util.Log.d("MyAppointments", "My Appointments Loading Complete")
+            android.util.Log.d("MyAppointments", "========================================")
+        }
+    }
+
+    LaunchedEffect(selectedFilter, appointments) {
+        filteredAppointments = when (selectedFilter) {
+            "Upcoming" -> appointments.filter { it.status.equals("CONFIRMED", ignoreCase = true) }
+            "Completed" -> appointments.filter { it.status.equals("COMPLETED", ignoreCase = true) }
+            "Cancelled" -> appointments.filter { it.status.equals("CANCELLED", ignoreCase = true) }
+            else -> appointments
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Filter chips
+        LazyRow(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(filters) { filter ->
+                FilterChip(
+                    selected = selectedFilter == filter,
+                    onClick = { selectedFilter = filter },
+                    label = { Text(filter) }
+                )
+            }
+        }
+
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (filteredAppointments.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Default.CalendarMonth,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "No ${if (selectedFilter == "All") "" else selectedFilter.lowercase()} appointments",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(filteredAppointments) { appointment ->
+                    DetailedAppointmentCard(
+                        appointment = appointment,
+                        onCancel = {
+                            // Refresh appointments list
+                            scope.launch {
+                                val userId = FirebaseAuthHelper.getCurrentUserId()
+                                appointments = FirestoreHelper.getUserAppointments(userId)
+                                filteredAppointments = when (selectedFilter) {
+                                    "Upcoming" -> appointments.filter { it.status.equals("CONFIRMED", ignoreCase = true) }
+                                    "Completed" -> appointments.filter { it.status.equals("COMPLETED", ignoreCase = true) }
+                                    "Cancelled" -> appointments.filter { it.status.equals("CANCELLED", ignoreCase = true) }
+                                    else -> appointments
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DetailedAppointmentCard(appointment: Appointment, onCancel: (Appointment) -> Unit = {}) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var showCancelDialog by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = appointment.doctorName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = appointment.date,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.AccessTime,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = appointment.time,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                StatusChip(status = appointment.status)
+            }
+
+            // Show cancel button only for CONFIRMED appointments
+            if (appointment.status.equals("CONFIRMED", ignoreCase = true)) {
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = { showCancelDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFFE53935)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Cancel,
+                        contentDescription = "Cancel",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Cancel Appointment")
+                }
+            }
+        }
+    }
+
+    if (showCancelDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text("Cancel Appointment") },
+            text = {
+                Text("Are you sure you want to cancel this appointment with ${appointment.doctorName} on ${appointment.date}?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            val result = FirestoreHelper.cancelAppointment(
+                                appointment.id,
+                                appointment.slotId
+                            )
+                            result.fold(
+                                onSuccess = {
+                                    Toast.makeText(
+                                        context,
+                                        "Appointment cancelled successfully",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    showCancelDialog = false
+                                    onCancel(appointment)
+                                },
+                                onFailure = { e ->
+                                    Toast.makeText(
+                                        context,
+                                        "Error: ${e.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            )
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFE53935)
+                    )
+                ) {
+                    Text("Yes, Cancel")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDialog = false }) {
+                    Text("Keep Appointment")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun BookAppointmentTab() {
     var step by remember { mutableStateOf(0) }
     var bookingMode by remember { mutableStateOf<BookingMode?>(null) }
 
@@ -172,9 +470,29 @@ fun BookByDoctorFlow(onBack: () -> Unit) {
 
     LaunchedEffect(Unit) {
         isLoading = true
+
+        // First, migrate old slots to use 'isBooked' field
+        android.util.Log.d("UserAppointments", "Running slot field migration...")
+        val migrationResult = FirestoreMigration.migrateSlotFields()
+        migrationResult.fold(
+            onSuccess = { count ->
+                android.util.Log.d("UserAppointments", "Migration completed: $count slots updated")
+                Toast.makeText(context, "Database updated: $count slots migrated", Toast.LENGTH_SHORT).show()
+            },
+            onFailure = { e ->
+                android.util.Log.e("UserAppointments", "Migration failed: ${e.message}", e)
+            }
+        )
+
         doctors = FirestoreHelper.getDoctors()
         filteredDoctors = doctors
         isLoading = false
+
+        // Debug: Run comprehensive diagnostics
+        scope.launch {
+            android.util.Log.d("UserAppointments", "Running Firestore diagnostics...")
+            FirestoreDiagnostic.runDiagnostics()
+        }
     }
 
     LaunchedEffect(searchQuery) {
@@ -218,8 +536,19 @@ fun BookByDoctorFlow(onBack: () -> Unit) {
                                 onClick = {
                                     selectedDoctor = doctor
                                     scope.launch {
+                                        isLoading = true
+                                        android.util.Log.d("UserAppointments", "Fetching slots for doctor: ${doctor.id}, name: ${doctor.name}")
+
+                                        // Run test query for this specific doctor
+                                        FirestoreDiagnostic.testQuery(doctor.id)
+
                                         val slots = FirestoreHelper.getAvailableSlots(doctor.id)
+                                        android.util.Log.d("UserAppointments", "Fetched ${slots.size} slots")
                                         availableSlots = slots
+                                        isLoading = false
+                                        if (slots.isEmpty()) {
+                                            Toast.makeText(context, "No available slots for this doctor", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
                         )
@@ -233,8 +562,12 @@ fun BookByDoctorFlow(onBack: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (availableSlots.isEmpty()) {
-                Text("No available slots.")
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (availableSlots.isEmpty()) {
+                Text("No available slots for this doctor.")
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(availableSlots) { slot ->
