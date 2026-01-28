@@ -1,6 +1,8 @@
 package com.example.myhealthmateaapp
 
+import com.example.healthmate.R
 import android.content.Intent
+
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity

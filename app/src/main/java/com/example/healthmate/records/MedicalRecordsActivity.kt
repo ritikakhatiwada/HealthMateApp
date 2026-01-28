@@ -262,19 +262,27 @@ fun RecordCard(record: MedicalRecord, onClick: () -> Unit) {
 suspend fun uploadToCloudinary(file: File): String? {
     return withContext(Dispatchers.IO) {
         try {
+            android.util.Log.d("Cloudinary", "========================================")
+            android.util.Log.d("Cloudinary", "Uploading file: ${file.name}")
+            android.util.Log.d("Cloudinary", "File size: ${file.length()} bytes")
+
             val cloudName = BuildConfig.CLOUDINARY_CLOUD_NAME
             val apiKey = BuildConfig.CLOUDINARY_API_KEY
             val apiSecret = BuildConfig.CLOUDINARY_API_SECRET
 
+            android.util.Log.d("Cloudinary", "Cloud name: $cloudName")
+            android.util.Log.d("Cloudinary", "API key configured: ${apiKey.isNotEmpty()}")
+
             if (cloudName.isEmpty() || apiKey.isEmpty()) {
+                android.util.Log.e("Cloudinary", "Missing Cloudinary credentials!")
                 return@withContext null
             }
 
             val client = OkHttpClient()
             val timestamp = (System.currentTimeMillis() / 1000).toString()
 
-            // Create signature
-            val signatureString = "timestamp=$timestamp$apiSecret"
+            // Create signature with type parameter for public access
+            val signatureString = "timestamp=$timestamp&type=upload$apiSecret"
             val signature =
                     java.security.MessageDigest.getInstance("SHA-1")
                             .digest(signatureString.toByteArray())
@@ -291,6 +299,7 @@ suspend fun uploadToCloudinary(file: File): String? {
                             .addFormDataPart("api_key", apiKey)
                             .addFormDataPart("timestamp", timestamp)
                             .addFormDataPart("signature", signature)
+                            .addFormDataPart("type", "upload")  // Makes file publicly accessible
                             .build()
 
             val request =
@@ -299,15 +308,34 @@ suspend fun uploadToCloudinary(file: File): String? {
                             .post(requestBody)
                             .build()
 
+            android.util.Log.d("Cloudinary", "Sending upload request...")
             val response = client.newCall(request).execute()
 
+            android.util.Log.d("Cloudinary", "Response code: ${response.code}")
+            android.util.Log.d("Cloudinary", "Response message: ${response.message}")
+
             if (response.isSuccessful) {
-                val jsonResponse = JSONObject(response.body?.string() ?: "")
-                jsonResponse.getString("secure_url")
+                val responseBody = response.body?.string() ?: ""
+                android.util.Log.d("Cloudinary", "Response body: $responseBody")
+
+                val jsonResponse = JSONObject(responseBody)
+                val secureUrl = jsonResponse.getString("secure_url")
+
+                android.util.Log.d("Cloudinary", "Upload successful!")
+                android.util.Log.d("Cloudinary", "Secure URL: $secureUrl")
+                android.util.Log.d("Cloudinary", "========================================")
+
+                secureUrl
             } else {
+                val errorBody = response.body?.string()
+                android.util.Log.e("Cloudinary", "Upload failed!")
+                android.util.Log.e("Cloudinary", "Error body: $errorBody")
+                android.util.Log.d("Cloudinary", "========================================")
                 null
             }
         } catch (e: Exception) {
+            android.util.Log.e("Cloudinary", "Exception during upload: ${e.message}", e)
+            android.util.Log.d("Cloudinary", "========================================")
             null
         }
     }

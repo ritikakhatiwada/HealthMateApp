@@ -25,13 +25,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.healthmate.R
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            LoginBody()
-        }
+        setContent { LoginBody() }
     }
 }
 
@@ -47,115 +46,95 @@ fun LoginBody() {
     val context = LocalContext.current
 
     Scaffold { padding ->
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
 
             // Background Image
             Image(
-                painter = painterResource(R.drawable.background),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                    painter = painterResource(R.drawable.background),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
             )
 
             Column(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .background(
-                        Color.White.copy(alpha = 0.9f),
-                        RoundedCornerShape(20.dp)
-                    )
-                    .padding(20.dp)
-                    .fillMaxWidth(0.9f),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    modifier =
+                            Modifier.align(Alignment.Center)
+                                    .background(
+                                            Color.White.copy(alpha = 0.9f),
+                                            RoundedCornerShape(20.dp)
+                                    )
+                                    .padding(20.dp)
+                                    .fillMaxWidth(0.9f),
+                    horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                Text(
-                    text = "Login",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text(text = "Login", fontSize = 22.sp, fontWeight = FontWeight.Bold)
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 // Email
                 OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    placeholder = { Text("Enter your email") },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email") },
+                        placeholder = { Text("Enter your email") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Password
                 OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    placeholder = { Text("Enter your password") },
-                    visualTransformation =
-                        if (passwordVisible)
-                            VisualTransformation.None
-                        else
-                            PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password
-                    ),
-                    trailingIcon = {
-                        IconButton(
-                            onClick = { passwordVisible = !passwordVisible }
-                        ) {
-                            Icon(
-                                painter = painterResource(
-                                    if (passwordVisible)
-                                        R.drawable.baseline_visibility_off_24
-                                    else
-                                        R.drawable.baseline_visibility_24
-                                ),
-                                contentDescription = null
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Password") },
+                        placeholder = { Text("Enter your password") },
+                        visualTransformation =
+                                if (passwordVisible) VisualTransformation.None
+                                else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                        painter =
+                                                painterResource(
+                                                        if (passwordVisible)
+                                                                R.drawable
+                                                                        .baseline_visibility_off_24
+                                                        else R.drawable.baseline_visibility_24
+                                                ),
+                                        contentDescription = null
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Remember me + Forgot password
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    Checkbox(
-                        checked = rememberMe,
-                        onCheckedChange = { rememberMe = it }
-                    )
+                    Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
 
                     Text("Remember me", fontSize = 13.sp)
 
                     Spacer(modifier = Modifier.weight(1f))
 
                     Text(
-                        text = "Forgot Password?",
-                        fontSize = 13.sp,
-                        color = Color(0xFF1E88E5),
-                        modifier = Modifier.clickable {
-                            Intent(context, ForgetPasswordActivity::class.java)
-                        }
+                            text = "Forgot Password?",
+                            fontSize = 13.sp,
+                            color = Color(0xFF1E88E5),
+                            modifier =
+                                    Modifier.clickable {
+                                        Intent(context, ForgetPasswordActivity::class.java)
+                                    }
                     )
                 }
 
@@ -163,39 +142,28 @@ fun LoginBody() {
 
                 // 🔐 LOGIN BUTTON → HOME
                 Button(
-                    onClick = {
-                        context.startActivity(
-                            Intent(context, HomeActivity()::class.java)
-                        )
-                        (context as ComponentActivity).finish()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF34C759)
-                    )
-                ) {
-                    Text(
-                        text = "Login",
-                        color = Color.White,
-                        fontSize = 16.sp
-                    )
-                }
+                        onClick = {
+                            context.startActivity(Intent(context, HomeActivity()::class.java))
+                            (context as ComponentActivity).finish()
+                        },
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34C759))
+                ) { Text(text = "Login", color = Color.White, fontSize = 16.sp) }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Sign Up
                 Text(
-                    text = "Don't have an account? Sign Up",
-                    color = Color(0xFF1E88E5),
-                    fontSize = 14.sp,
-                    modifier = Modifier.clickable {
-                        context.startActivity(
-                            Intent(context, SignUpActivity::class.java)
-                        )
-                    }
+                        text = "Don't have an account? Sign Up",
+                        color = Color(0xFF1E88E5),
+                        fontSize = 14.sp,
+                        modifier =
+                                Modifier.clickable {
+                                    context.startActivity(
+                                            Intent(context, SignUpActivity::class.java)
+                                    )
+                                }
                 )
             }
         }
