@@ -75,7 +75,11 @@ object FirebaseAuthHelper {
     }
 
     /** Get current user's ID */
-    fun getCurrentUserId(): String = auth.currentUser?.uid ?: ""
+    fun getCurrentUserId(): String {
+        val userId = auth.currentUser?.uid ?: ""
+        android.util.Log.d("FirebaseAuthHelper", "getCurrentUserId called - returning: '$userId'")
+        return userId
+    }
 
     /** Send password reset email */
     suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
