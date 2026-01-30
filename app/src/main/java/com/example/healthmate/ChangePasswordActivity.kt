@@ -8,7 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,6 +17,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.healthmate.ui.theme.HealthMateTheme
+import com.example.healthmate.ui.components.HealthMateTopBar
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
 import com.example.healthmate.util.ThemeManager
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
@@ -48,17 +51,16 @@ fun ChangePasswordScreen(onBack: () -> Unit) {
 
     Scaffold(
             topBar = {
-                TopAppBar(
-                        title = { Text("Change Password") },
-                        navigationIcon = {
-                            IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") }
-                        }
+                HealthMateTopBar(
+                        title = "Change Password",
+                        navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                        onNavigationClick = onBack
                 )
             }
     ) { padding ->
         Column(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.fillMaxSize().padding(padding).padding(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
             OutlinedTextField(
                     value = currentPassword,

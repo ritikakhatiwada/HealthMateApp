@@ -6,12 +6,11 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +24,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.healthmate.auth.FirebaseAuthHelper
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
 import com.example.healthmate.ui.theme.HealthMateTheme
 import com.example.healthmate.util.ThemeManager
 import kotlinx.coroutines.launch
@@ -50,137 +51,144 @@ fun ForgetPasswordBody(isDarkMode: Boolean = false) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Theme Colors
-    val cardBgColor =
-            if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.95f)
-    val textColor = if (isDarkMode) MaterialTheme.colorScheme.onSurface else Color.Black
-    val secondaryTextColor =
-            if (isDarkMode) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-                painter = painterResource(R.drawable.background),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                alpha = if (isDarkMode) 0.3f else 1f
-        )
-
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         Column(
-                modifier =
-                        Modifier.align(Alignment.Center)
-                                .background(cardBgColor, RoundedCornerShape(20.dp))
-                                .padding(24.dp)
-                                .fillMaxWidth(0.9f),
-                horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(Spacing.xxl)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                    text = "Forgot Password?",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textColor
+            // Premium Logo
+            Image(
+                painter = painterResource(id = R.drawable.logo_final),
+                contentDescription = "Logo",
+                modifier = Modifier.size(80.dp)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.xl))
 
             Text(
-                    text = "Enter your email to receive a reset link",
-                    fontSize = 14.sp,
-                    color = secondaryTextColor,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                text = "Forgot Password?",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
+
+            Text(
+                text = "Enter your email to receive a secure reset link",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.xxxl))
 
             errorMessage?.let { error ->
                 Text(
-                        text = error,
-                        color = Color.Red,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(bottom = 12.dp)
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = Spacing.md)
                 )
             }
 
             OutlinedTextField(
-                    value = email,
-                    onValueChange = {
-                        email = it
-                        errorMessage = null
-                    },
-                    label = { Text("Email", color = secondaryTextColor) },
-                    placeholder = { Text("Enter your email", color = secondaryTextColor) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    enabled = !isLoading,
-                    colors =
-                            OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = textColor,
-                                    unfocusedTextColor = textColor,
-                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedBorderColor = secondaryTextColor
-                            )
+                value = email,
+                onValueChange = {
+                    email = it
+                    errorMessage = null
+                },
+                label = { Text("Email Address") },
+                placeholder = { Text("e.g. name@example.com") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier.fillMaxWidth(),
+                shape = HealthMateShapes.InputField,
+                singleLine = true,
+                enabled = !isLoading,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(Spacing.xxl))
 
             Button(
-                    onClick = {
-                        if (email.isBlank()) {
-                            errorMessage = "Please enter your email"
-                            return@Button
-                        }
+                onClick = {
+                    if (email.isBlank()) {
+                        errorMessage = "Please enter your email"
+                        return@Button
+                    }
 
-                        isLoading = true
-                        errorMessage = null
+                    isLoading = true
+                    errorMessage = null
 
-                        coroutineScope.launch {
-                            val result = FirebaseAuthHelper.sendPasswordResetEmail(email.trim())
-                            isLoading = false
-                            result.fold(
-                                    onSuccess = {
-                                        Toast.makeText(
-                                                        context,
-                                                        "Password reset email sent! Check your inbox.",
-                                                        Toast.LENGTH_LONG
-                                                )
-                                                .show()
-                                        activity.finish()
-                                    },
-                                    onFailure = { error ->
-                                        errorMessage = error.message ?: "Failed to send reset email"
-                                    }
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors =
-                            ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    disabledContainerColor =
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                            ),
-                    enabled = !isLoading
+                    coroutineScope.launch {
+                        val result = FirebaseAuthHelper.sendPasswordResetEmail(email.trim())
+                        isLoading = false
+                        result.fold(
+                            onSuccess = {
+                                Toast.makeText(
+                                    context,
+                                    "Reset link sent to your email!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                activity.finish()
+                            },
+                            onFailure = { error ->
+                                errorMessage = error.message ?: "Failed to send reset email"
+                            }
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(54.dp),
+                shape = HealthMateShapes.ButtonLarge,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                enabled = !isLoading
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
                 } else {
-                    Text("Send Reset Link", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Send Reset Link",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(Spacing.xxl))
 
-            Row {
-                Text("Remembered your password? ", fontSize = 14.sp, color = secondaryTextColor)
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                        text = "Login",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable(enabled = !isLoading) { activity.finish() }
+                    text = "Remembered password? ",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Login",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable(enabled = !isLoading) { activity.finish() }
                 )
             }
         }

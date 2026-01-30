@@ -41,19 +41,30 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.healthmate.ui.theme.HealthMateTheme
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
+import com.example.healthmate.util.ThemeManager
+import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.MaterialTheme
+import android.app.Activity
 
 class ResetPasswordActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ResetPasswordBody()
+            val themeManager = ThemeManager(this)
+            val isDarkMode by themeManager.isDarkMode.collectAsState(initial = false)
+            HealthMateTheme(darkTheme = isDarkMode) {
+                ResetPasswordBody(isDarkMode)
+            }
         }
     }
 }
 
 @Composable
-fun ResetPasswordBody() {
+fun ResetPasswordBody(isDarkMode: Boolean = false) {
     val context = LocalContext.current
 
     var email by remember { mutableStateOf("") }
@@ -68,14 +79,19 @@ fun ResetPasswordBody() {
             painter = painterResource(id = R.drawable.background),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            alpha = if (isDarkMode) 0.3f else 1.0f
         )
 
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
-                .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(20.dp))
-                .padding(20.dp)
+                .background(
+                    if (isDarkMode) MaterialTheme.colorScheme.surface 
+                    else Color.White.copy(alpha = 0.95f), 
+                    HealthMateShapes.CardLarge
+                )
+                .padding(Spacing.xl)
                 .fillMaxWidth(0.9f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -90,7 +106,7 @@ fun ResetPasswordBody() {
                 label = { Text("OTP") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = HealthMateShapes.InputField
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -106,7 +122,7 @@ fun ResetPasswordBody() {
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = HealthMateShapes.InputField
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -122,7 +138,7 @@ fun ResetPasswordBody() {
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = HealthMateShapes.InputField
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -143,9 +159,9 @@ fun ResetPasswordBody() {
                         context.startActivity(intent)
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = HealthMateShapes.ButtonLarge,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text("Reset Password", color = Color.White)
             }
@@ -155,9 +171,9 @@ fun ResetPasswordBody() {
             // Back to Login Link
             Text(
                 text = "Back to Login",
-                color = Color(0xFF1E88E5),
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.clickable {
-                    context.startActivity(Intent(context, LoginActivity::class.java))
+                    (context as? Activity)?.finish()
                 }
             )
         }
