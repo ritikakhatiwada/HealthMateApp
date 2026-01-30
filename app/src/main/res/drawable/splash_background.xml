@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Simple white background - image is now handled by Compose with proper scaling -->
+    <item android:drawable="@color/white" />
+</layer-list>
