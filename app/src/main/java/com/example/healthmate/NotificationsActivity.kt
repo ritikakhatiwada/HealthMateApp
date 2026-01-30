@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,7 +25,7 @@ import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.Appointment
 import com.example.healthmate.model.Reminder
 import com.example.healthmate.ui.theme.HealthMateTheme
-import com.example.healthmate.ui.theme.Purple40
+import androidx.compose.material3.MaterialTheme
 import java.util.*
 import kotlinx.coroutines.launch
 
@@ -70,10 +71,10 @@ fun NotificationsScreen() {
                         title = { Text("Notifications", color = Color.White) },
                         navigationIcon = {
                             IconButton(onClick = { (context as? ComponentActivity)?.finish() }) {
-                                Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
                             }
                         },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40)
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
                 )
             }
     ) { padding ->
@@ -82,7 +83,7 @@ fun NotificationsScreen() {
                 isLoading -> {
                     CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center),
-                            color = Purple40
+                            color = MaterialTheme.colorScheme.primary
                     )
                 }
                 notifications.isEmpty() -> {
