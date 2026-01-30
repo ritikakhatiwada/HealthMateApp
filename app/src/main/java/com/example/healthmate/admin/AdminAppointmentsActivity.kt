@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.Appointment
+import com.example.healthmate.ui.components.HealthMateTopBar
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
 import com.example.healthmate.ui.theme.HealthMateTheme
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,7 +34,11 @@ class AdminAppointmentsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { HealthMateTheme { AdminAppointmentsScreen() } }
+        setContent {
+            val themeManager = com.example.healthmate.util.ThemeManager(this)
+            val isDarkMode by themeManager.isDarkMode.collectAsState(initial = false)
+            HealthMateTheme(darkTheme = isDarkMode) { AdminAppointmentsScreen() }
+        }
     }
 }
 
@@ -51,17 +59,10 @@ fun AdminAppointmentsScreen() {
 
     Scaffold(
             topBar = {
-                TopAppBar(
-                        title = { Text("All Appointments", color = Color.White) },
-                        navigationIcon = {
-                            IconButton(onClick = { (context as? ComponentActivity)?.finish() }) {
-                                Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
-                            }
-                        },
-                        colors =
-                                TopAppBarDefaults.topAppBarColors(
-                                        containerColor = Color(0xFF9C27B0)
-                                )
+                HealthMateTopBar(
+                        title = "All Appointments",
+                        navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                        onNavigationClick = { (context as? ComponentActivity)?.finish() }
                 )
             }
     ) { padding ->
@@ -70,7 +71,7 @@ fun AdminAppointmentsScreen() {
                 isLoading -> {
                     CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center),
-                            color = Color(0xFF9C27B0)
+                            color = MaterialTheme.colorScheme.primary
                     )
                 }
                 appointments.isEmpty() -> {
@@ -82,18 +83,22 @@ fun AdminAppointmentsScreen() {
                         Icon(
                                 imageVector = Icons.Default.CalendarMonth,
                                 contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = Color.Gray
+                                modifier = Modifier.size(80.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "No appointments", fontSize = 18.sp, color = Color.Gray)
+                        Spacer(modifier = Modifier.height(Spacing.lg))
+                        Text(
+                                text = "No appointments",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
                 else -> {
                     LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            contentPadding = PaddingValues(Spacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) { items(appointments) { appointment -> AdminAppointmentCard(appointment) } }
                 }
             }
@@ -107,8 +112,8 @@ fun AdminAppointmentCard(appointment: Appointment) {
 
     Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            shape = HealthMateShapes.CardLarge,
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Row(
@@ -119,7 +124,7 @@ fun AdminAppointmentCard(appointment: Appointment) {
                         imageVector = Icons.Default.CalendarMonth,
                         contentDescription = null,
                         modifier = Modifier.size(32.dp),
-                        tint = Color(0xFF9C27B0)
+                        tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
@@ -136,7 +141,7 @@ fun AdminAppointmentCard(appointment: Appointment) {
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Divider()
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(12.dp))
             Row(
                     modifier = Modifier.fillMaxWidth(),

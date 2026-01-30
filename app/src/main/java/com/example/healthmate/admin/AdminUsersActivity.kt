@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.User
+import com.example.healthmate.ui.components.HealthMateTopBar
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
 import com.example.healthmate.ui.theme.HealthMateTheme
 import kotlinx.coroutines.launch
 
@@ -30,7 +34,11 @@ class AdminUsersActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { HealthMateTheme { AdminUsersScreen() } }
+        setContent {
+            val themeManager = com.example.healthmate.util.ThemeManager(this)
+            val isDarkMode by themeManager.isDarkMode.collectAsState(initial = false)
+            HealthMateTheme(darkTheme = isDarkMode) { AdminUsersScreen() }
+        }
     }
 }
 
@@ -51,17 +59,10 @@ fun AdminUsersScreen() {
 
     Scaffold(
             topBar = {
-                TopAppBar(
-                        title = { Text("Users", color = Color.White) },
-                        navigationIcon = {
-                            IconButton(onClick = { (context as? ComponentActivity)?.finish() }) {
-                                Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
-                            }
-                        },
-                        colors =
-                                TopAppBarDefaults.topAppBarColors(
-                                        containerColor = Color(0xFF1976D2)
-                                )
+                HealthMateTopBar(
+                        title = "Users",
+                        navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                        onNavigationClick = { (context as? ComponentActivity)?.finish() }
                 )
             }
     ) { padding ->
@@ -70,7 +71,7 @@ fun AdminUsersScreen() {
                 isLoading -> {
                     CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center),
-                            color = Color(0xFF1976D2)
+                            color = MaterialTheme.colorScheme.primary
                     )
                 }
                 users.isEmpty() -> {
@@ -82,18 +83,22 @@ fun AdminUsersScreen() {
                         Icon(
                                 imageVector = Icons.Default.People,
                                 contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = Color.Gray
+                                modifier = Modifier.size(80.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "No users yet", fontSize = 18.sp, color = Color.Gray)
+                        Spacer(modifier = Modifier.height(Spacing.lg))
+                        Text(
+                                text = "No users yet",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
                 else -> {
                     LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            contentPadding = PaddingValues(Spacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
                         items(users) { user ->
                             UserCard(user = user) {
@@ -114,8 +119,8 @@ fun AdminUsersScreen() {
 fun UserCard(user: User, onClick: () -> Unit) {
     Card(
             modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            shape = HealthMateShapes.CardLarge,
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -125,21 +130,25 @@ fun UserCard(user: User, onClick: () -> Unit) {
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
                     modifier = Modifier.size(48.dp),
-                    tint = Color(0xFF1976D2)
+                    tint = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Spacing.md))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                         text = user.name.ifBlank { "User" },
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                 )
-                Text(text = user.email, fontSize = 14.sp, color = Color.Gray)
+                Text(
+                        text = user.email,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = Color.Gray
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
         }
     }

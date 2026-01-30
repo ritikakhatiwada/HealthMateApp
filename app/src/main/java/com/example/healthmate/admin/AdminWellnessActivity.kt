@@ -5,11 +5,16 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.WellnessResource
+import com.example.healthmate.ui.components.HealthMateTopBar
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
 import com.example.healthmate.ui.theme.HealthMateTheme
 import kotlinx.coroutines.launch
 
@@ -29,7 +37,11 @@ class AdminWellnessActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { HealthMateTheme { AdminWellnessScreen() } }
+        setContent {
+            val themeManager = com.example.healthmate.util.ThemeManager(this)
+            val isDarkMode by themeManager.isDarkMode.collectAsState(initial = false)
+            HealthMateTheme(darkTheme = isDarkMode) { AdminWellnessScreen() }
+        }
     }
 }
 
@@ -40,6 +52,7 @@ fun AdminWellnessScreen() {
     var resources by remember { mutableStateOf<List<WellnessResource>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var showAddDialog by remember { mutableStateOf(false) }
+    var selectedResource by remember { mutableStateOf<WellnessResource?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     fun loadResources() {
@@ -51,6 +64,14 @@ fun AdminWellnessScreen() {
     }
 
     LaunchedEffect(Unit) { loadResources() }
+
+    // Detail Dialog
+    selectedResource?.let { resource ->
+        WellnessDetailDialog(
+            resource = resource,
+            onDismiss = { selectedResource = null }
+        )
+    }
 
     // Add Resource Dialog
     if (showAddDialog) {
@@ -89,24 +110,18 @@ fun AdminWellnessScreen() {
 
     Scaffold(
             topBar = {
-                TopAppBar(
-                        title = { Text("Wellness Resources", color = Color.White) },
-                        navigationIcon = {
-                            IconButton(onClick = { (context as? ComponentActivity)?.finish() }) {
-                                Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
-                            }
-                        },
-                        colors =
-                                TopAppBarDefaults.topAppBarColors(
-                                        containerColor = Color(0xFFFF9800)
-                                )
+                HealthMateTopBar(
+                        title = "Wellness Resources",
+                        navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                        onNavigationClick = { (context as? ComponentActivity)?.finish() }
                 )
             },
             floatingActionButton = {
                 FloatingActionButton(
                         onClick = { showAddDialog = true },
-                        containerColor = Color(0xFFFF9800)
-                ) { Icon(Icons.Default.Add, "Add Resource", tint = Color.White) }
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) { Icon(Icons.Default.Add, "Add Resource") }
             }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -114,7 +129,7 @@ fun AdminWellnessScreen() {
                 isLoading -> {
                     CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center),
-                            color = Color(0xFFFF9800)
+                            color = MaterialTheme.colorScheme.primary
                     )
                 }
                 resources.isEmpty() -> {
@@ -126,23 +141,32 @@ fun AdminWellnessScreen() {
                         Icon(
                                 imageVector = Icons.Default.Psychology,
                                 contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = Color.Gray
+                                modifier = Modifier.size(80.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "No wellness resources", fontSize = 18.sp, color = Color.Gray)
-                        Text(text = "Tap + to add a resource", fontSize = 14.sp, color = Color.Gray)
+                        Spacer(modifier = Modifier.height(Spacing.lg))
+                        Text(
+                                text = "No wellness resources",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                                text = "Tap + to add a resource",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
                     }
                 }
                 else -> {
                     LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            contentPadding = PaddingValues(Spacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
                         items(resources) { resource ->
                             AdminWellnessCard(
                                     resource = resource,
+                                    onClick = { selectedResource = resource },
                                     onDelete = {
                                         coroutineScope.launch {
                                             FirestoreHelper.deleteWellnessResource(resource.id)
@@ -159,36 +183,44 @@ fun AdminWellnessScreen() {
 }
 
 @Composable
-fun AdminWellnessCard(resource: WellnessResource, onDelete: () -> Unit) {
+fun AdminWellnessCard(resource: WellnessResource, onClick: () -> Unit, onDelete: () -> Unit) {
     val isHelpline = resource.type.lowercase() == "helpline"
 
     Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+            shape = HealthMateShapes.CardLarge,
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                    imageVector = if (isHelpline) Icons.Default.Phone else Icons.Default.Article,
+                    imageVector = if (isHelpline) Icons.Default.Phone else Icons.AutoMirrored.Filled.Article,
                     contentDescription = null,
                     modifier = Modifier.size(40.dp),
-                    tint = Color(0xFFFF9800)
+                    tint = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Spacing.md))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = resource.title, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                        text = resource.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                )
                 Text(
                         text =
                                 if (isHelpline) resource.helplineNumber
                                 else resource.content.take(50) + "...",
-                        fontSize = 14.sp,
-                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2
                 )
-                Text(text = resource.type, fontSize = 12.sp, color = Color(0xFFFF9800))
+                Text(
+                        text = resource.type,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                )
             }
             IconButton(onClick = onDelete) {
                 Icon(
@@ -231,12 +263,19 @@ fun AddWellnessResourceDialog(
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
+                    val tfColors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     OutlinedTextField(
                             value = title,
                             onValueChange = { title = it },
                             label = { Text("Title") },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            colors = tfColors
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     if (type == "Article") {
@@ -245,7 +284,8 @@ fun AddWellnessResourceDialog(
                                 onValueChange = { content = it },
                                 label = { Text("Content") },
                                 modifier = Modifier.fillMaxWidth().height(120.dp),
-                                maxLines = 5
+                                maxLines = 5,
+                                colors = tfColors
                         )
                     } else {
                         OutlinedTextField(
@@ -253,7 +293,8 @@ fun AddWellnessResourceDialog(
                                 onValueChange = { helpline = it },
                                 label = { Text("Helpline Number") },
                                 modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
+                                singleLine = true,
+                                colors = tfColors
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         OutlinedTextField(
@@ -261,7 +302,8 @@ fun AddWellnessResourceDialog(
                                 onValueChange = { content = it },
                                 label = { Text("Description") },
                                 modifier = Modifier.fillMaxWidth(),
-                                maxLines = 2
+                                maxLines = 2,
+                                colors = tfColors
                         )
                     }
                 }
@@ -275,5 +317,40 @@ fun AddWellnessResourceDialog(
                 ) { Text("Add") }
             },
             dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun WellnessDetailDialog(resource: WellnessResource, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(resource.title, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    text = "Type: ${resource.type}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                if (resource.type.lowercase() == "helpline") {
+                    Text(
+                        text = "Helpline: ${resource.helplineNumber}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+                Text(
+                    text = resource.content,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
     )
 }

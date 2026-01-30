@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.healthmate.admin.AddDoctorActivity
 import com.example.healthmate.auth.FirebaseAuthHelper
+import com.example.healthmate.ui.components.BottomNavItem
+import com.example.healthmate.ui.components.HealthMateBottomNav
 import com.example.healthmate.ui.components.HealthMateTopBar
 import com.example.healthmate.ui.screens.*
 import com.example.healthmate.ui.theme.HealthMateTheme
@@ -39,6 +41,13 @@ fun AdminDashboardScreen() {
         val context = LocalContext.current
         var selectedTab by remember { mutableStateOf(0) }
 
+        val navItems = listOf(
+            BottomNavItem("Home", Icons.Default.Dashboard),
+            BottomNavItem("Doctors", Icons.Default.MedicalServices),
+            BottomNavItem("Appts", Icons.Default.CalendarMonth),
+            BottomNavItem("Settings", Icons.Default.Settings)
+        )
+
         Scaffold(
                 topBar = {
                         HealthMateTopBar(
@@ -53,75 +62,11 @@ fun AdminDashboardScreen() {
                         )
                 },
                 bottomBar = {
-                        NavigationBar(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                        ) {
-                                NavigationBarItem(
-                                        selected = selectedTab == 0,
-                                        onClick = { selectedTab = 0 },
-                                        icon = { Icon(Icons.Default.Dashboard, "Home") },
-                                        label = { Text("Home") },
-                                        colors =
-                                                NavigationBarItemDefaults.colors(
-                                                        selectedIconColor =
-                                                                MaterialTheme.colorScheme.primary,
-                                                        selectedTextColor =
-                                                                MaterialTheme.colorScheme.primary,
-                                                        indicatorColor =
-                                                                MaterialTheme.colorScheme
-                                                                        .primaryContainer
-                                                )
-                                )
-                                NavigationBarItem(
-                                        selected = selectedTab == 1,
-                                        onClick = { selectedTab = 1 },
-                                        icon = { Icon(Icons.Default.MedicalServices, "Doctors") },
-                                        label = { Text("Doctors") },
-                                        colors =
-                                                NavigationBarItemDefaults.colors(
-                                                        selectedIconColor =
-                                                                MaterialTheme.colorScheme.primary,
-                                                        selectedTextColor =
-                                                                MaterialTheme.colorScheme.primary,
-                                                        indicatorColor =
-                                                                MaterialTheme.colorScheme
-                                                                        .primaryContainer
-                                                )
-                                )
-                                NavigationBarItem(
-                                        selected = selectedTab == 2,
-                                        onClick = { selectedTab = 2 },
-                                        icon = { Icon(Icons.Default.CalendarMonth, "Appts") },
-                                        label = { Text("Appts") },
-                                        colors =
-                                                NavigationBarItemDefaults.colors(
-                                                        selectedIconColor =
-                                                                MaterialTheme.colorScheme.primary,
-                                                        selectedTextColor =
-                                                                MaterialTheme.colorScheme.primary,
-                                                        indicatorColor =
-                                                                MaterialTheme.colorScheme
-                                                                        .primaryContainer
-                                                )
-                                )
-                                NavigationBarItem(
-                                        selected = selectedTab == 3,
-                                        onClick = { selectedTab = 3 },
-                                        icon = { Icon(Icons.Default.Settings, "Settings") },
-                                        label = { Text("Settings") },
-                                        colors =
-                                                NavigationBarItemDefaults.colors(
-                                                        selectedIconColor =
-                                                                MaterialTheme.colorScheme.primary,
-                                                        selectedTextColor =
-                                                                MaterialTheme.colorScheme.primary,
-                                                        indicatorColor =
-                                                                MaterialTheme.colorScheme
-                                                                        .primaryContainer
-                                                )
-                                )
-                        }
+                        HealthMateBottomNav(
+                                items = navItems,
+                                selectedIndex = selectedTab,
+                                onItemSelected = { selectedTab = it }
+                        )
                 }
         ) { padding ->
                 Box(modifier = Modifier.padding(padding)) {
