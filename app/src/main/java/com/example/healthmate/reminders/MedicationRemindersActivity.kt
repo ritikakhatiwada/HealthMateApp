@@ -13,8 +13,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,13 +25,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.healthmate.auth.FirebaseAuthHelper
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.Reminder
+import com.example.healthmate.ui.components.AddReminderDialog
+import com.example.healthmate.ui.components.HealthMateTopBar
+import com.example.healthmate.ui.components.ReminderCard
 import com.example.healthmate.ui.theme.HealthMateTheme
-import com.example.healthmate.ui.theme.Purple40
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
+import com.example.healthmate.util.ReminderUtils
 import java.util.*
 import kotlinx.coroutines.launch
 
@@ -76,7 +84,7 @@ fun MedicationRemindersScreen() {
                         result.fold(
                                 onSuccess = { reminderId ->
                                     // Schedule notification
-                                    scheduleReminder(context, reminderId, medicineName, time)
+                                    ReminderUtils.scheduleReminder(context, reminderId, medicineName, time)
                                     Toast.makeText(context, "Reminder added!", Toast.LENGTH_SHORT)
                                             .show()
                                     loadReminders()
@@ -97,70 +105,107 @@ fun MedicationRemindersScreen() {
     }
 
     Scaffold(
-            topBar = {
-                TopAppBar(
-                        title = { Text("Medication Reminders", color = Color.White) },
-                        navigationIcon = {
-                            IconButton(onClick = { (context as? ComponentActivity)?.finish() }) {
-                                Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40)
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                        onClick = { showAddDialog = true },
-                        containerColor = Purple40
-                ) { Icon(Icons.Default.Add, "Add Reminder", tint = Color.White) }
-            }
+        topBar = {
+            HealthMateTopBar(
+                title = "Medication",
+                subtitle = "Reminders & Schedule",
+                navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                onNavigationClick = { (context as? ComponentActivity)?.finish() }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                shape = CircleShape
+            ) { Icon(Icons.Default.Add, "Add Reminder", modifier = Modifier.size(28.dp)) }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when {
                 isLoading -> {
                     CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = Purple40
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 reminders.isEmpty() -> {
                     Column(
-                            modifier = Modifier.fillMaxSize().padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                        modifier = Modifier.fillMaxSize().padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Icon(
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                            modifier = Modifier.size(120.dp)
+                        ) {
+                            Icon(
                                 imageVector = Icons.Default.Alarm,
                                 contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "No reminders set", fontSize = 18.sp, color = Color.Gray)
+                                modifier = Modifier.padding(24.dp),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.xl))
                         Text(
-                                text = "Tap + to add a medication reminder",
-                                fontSize = 14.sp,
-                                color = Color.Gray
+                            text = "No Reminders Set",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                        Text(
+                            text = "Keep track of your health by adding your daily medication schedule.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.xl))
+                        Button(
+                            onClick = { showAddDialog = true },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(Icons.Default.Add, null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Setup First Reminder")
+                        }
                     }
                 }
                 else -> {
-                    LazyColumn(
+                    Column(modifier = Modifier.fillMaxSize().padding(horizontal = Spacing.lg)) {
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                            text = "Daily Schedule",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                        LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(reminders) { reminder ->
-                            ReminderCard(
+                            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+                            contentPadding = PaddingValues(bottom = 80.dp)
+                        ) {
+                            items(reminders) { reminder ->
+                                ReminderCard(
                                     reminder = reminder,
                                     onDelete = {
                                         coroutineScope.launch {
                                             FirestoreHelper.deleteReminder(reminder.id)
-                                            cancelReminder(context, reminder.id)
+                                            ReminderUtils.cancelReminder(context, reminder.id)
                                             loadReminders()
                                         }
                                     }
-                            )
+                                )
+                            }
                         }
                     }
                 }
@@ -169,166 +214,4 @@ fun MedicationRemindersScreen() {
     }
 }
 
-@Composable
-fun ReminderCard(reminder: Reminder, onDelete: () -> Unit) {
-    Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                    imageVector = Icons.Default.Medication,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = Purple40
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = reminder.medicineName, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(text = "Daily at ${reminder.time}", fontSize = 14.sp, color = Color.Gray)
-            }
-            IconButton(onClick = onDelete) {
-                Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = Color.Red
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddReminderDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Unit) {
-    var medicineName by remember { mutableStateOf("") }
-    var selectedTime by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-
-    // Time Picker
-    val timePickerDialog =
-            android.app.TimePickerDialog(
-                    context,
-                    { _, hourOfDay, minute ->
-                        val amPm = if (hourOfDay < 12) "AM" else "PM"
-                        val hour = if (hourOfDay % 12 == 0) 12 else hourOfDay % 12
-                        // Store as HH:mm for processing, or format nicely for display
-                        // We'll store as HH:mm (24h) for easy sorting, but format for display if
-                        // needed
-                        // For now, let's stick to 24h format for simplicity in backend, or update
-                        // Model
-                        val formattedTime = String.format("%02d:%02d", hourOfDay, minute)
-                        selectedTime = formattedTime
-                    },
-                    calendar.get(Calendar.HOUR_OF_DAY),
-                    calendar.get(Calendar.MINUTE),
-                    false // false for AM/PM mode
-            )
-
-    AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text("Add Medication Reminder") },
-            text = {
-                Column {
-                    OutlinedTextField(
-                            value = medicineName,
-                            onValueChange = { medicineName = it },
-                            label = { Text("Medicine Name") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                            value = selectedTime,
-                            onValueChange = {},
-                            label = { Text("Time") },
-                            placeholder = { Text("Select Time") },
-                            modifier =
-                                    Modifier.fillMaxWidth().clickable { timePickerDialog.show() },
-                            enabled = false, // Disable typing, force picker
-                            colors =
-                                    OutlinedTextFieldDefaults.colors(
-                                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                                            disabledBorderColor = MaterialTheme.colorScheme.outline,
-                                            disabledLabelColor =
-                                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                        onClick = {
-                            if (medicineName.isNotBlank() && selectedTime.isNotBlank()) {
-                                onAdd(medicineName, selectedTime)
-                            }
-                        },
-                        enabled = medicineName.isNotBlank() && selectedTime.isNotBlank()
-                ) { Text("Add") }
-            },
-            dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
-    )
-}
-
-// Schedule alarm for reminder
-fun scheduleReminder(context: Context, reminderId: String, medicineName: String, time: String) {
-    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-    val intent =
-            Intent(context, ReminderReceiver::class.java).apply {
-                putExtra("reminderId", reminderId)
-                putExtra("medicineName", medicineName)
-            }
-
-    val pendingIntent =
-            PendingIntent.getBroadcast(
-                    context,
-                    reminderId.hashCode(),
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-
-    // Parse time
-    val parts = time.split(":")
-    val hour = parts.getOrNull(0)?.toIntOrNull() ?: 8
-    val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
-
-    val calendar =
-            Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, hour)
-                set(Calendar.MINUTE, minute)
-                set(Calendar.SECOND, 0)
-
-                // If time has passed today, schedule for tomorrow
-                if (before(Calendar.getInstance())) {
-                    add(Calendar.DAY_OF_MONTH, 1)
-                }
-            }
-
-    // Set repeating alarm (daily)
-    alarmManager.setRepeating(
-            AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            AlarmManager.INTERVAL_DAY,
-            pendingIntent
-    )
-}
-
-fun cancelReminder(context: Context, reminderId: String) {
-    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    val intent = Intent(context, ReminderReceiver::class.java)
-    val pendingIntent =
-            PendingIntent.getBroadcast(
-                    context,
-                    reminderId.hashCode(),
-                    intent,
-                    PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-            )
-    pendingIntent?.let { alarmManager.cancel(it) }
-}
+// End of file
