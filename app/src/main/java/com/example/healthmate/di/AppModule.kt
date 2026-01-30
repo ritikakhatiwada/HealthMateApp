@@ -20,6 +20,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import com.example.healthmate.domain.repository.AuthRepository
+import com.example.healthmate.data.repository.AuthRepositoryImpl
 import javax.inject.Singleton
 
 /**
@@ -81,5 +83,11 @@ object AppModule {
         @ApplicationContext context: Context
     ): ConnectivityObserver {
         return NetworkConnectivityObserver(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(): AuthRepository {
+        return AuthRepositoryImpl()
     }
 }
