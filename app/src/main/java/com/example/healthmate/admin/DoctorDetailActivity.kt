@@ -1,18 +1,24 @@
 package com.example.healthmate.admin
 
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Save
@@ -20,28 +26,34 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import java.text.SimpleDateFormat
-import java.util.*
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.Doctor
 import com.example.healthmate.model.Slot
 import com.example.healthmate.ui.theme.HealthMateTheme
+import com.example.healthmate.util.CloudinaryHelper
 import com.example.healthmate.util.ThemeManager
 import com.example.healthmate.util.FirestoreMigration
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 
 class DoctorDetailActivity : ComponentActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
                 super.onCreate(savedInstanceState)
-                enableEdgeToEdge()
                 val doctorId = intent.getStringExtra("doctorId") ?: ""
-
+                enableEdgeToEdge()
                 setContent {
                         val themeManager = ThemeManager(this)
                         val isDarkMode by themeManager.isDarkMode.collectAsState(initial = false)
@@ -63,9 +75,41 @@ fun DoctorDetailScreen(doctorId: String, onBack: () -> Unit) {
         var isEditing by remember { mutableStateOf(false) }
         var isSaving by remember { mutableStateOf(false) }
         var showAddSlotDialog by remember { mutableStateOf(false) }
+        var showDeleteConfirm by remember { mutableStateOf(false) }
+        var isDeletingDoctor by remember { mutableStateOf(false) }
         var slots by remember { mutableStateOf<List<Slot>>(emptyList()) }
 
         // Editable State
+        var profilePictureUrl by remember { mutableStateOf<String?>(null) }
+        var isUploadingImage by remember { mutableStateOf(false) }
+
+        // Image Picker
+        val imagePicker = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) { uri: Uri? ->
+            uri?.let { selectedUri ->
+                scope.launch {
+                    isUploadingImage = true
+                    try {
+                        val inputStream = context.contentResolver.openInputStream(selectedUri)
+                        val tempFile = File(context.cacheDir, "doctor_${System.currentTimeMillis()}.jpg")
+                        FileOutputStream(tempFile).use { output -> inputStream?.copyTo(output) }
+                        inputStream?.close()
+
+                        val url = CloudinaryHelper.uploadProfileImage(tempFile)
+                        if (url != null) {
+                            FirestoreHelper.updateDoctor(doctorId, mapOf("profilePicture" to url))
+                            profilePictureUrl = url
+                            Toast.makeText(context, "Profile picture updated!", Toast.LENGTH_SHORT).show()
+                        }
+                        tempFile.delete()
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    isUploadingImage = false
+                }
+            }
+        }
         var name by remember { mutableStateOf("") }
         var email by remember { mutableStateOf("") } // Often read-only
         var specialization by remember { mutableStateOf("") }
@@ -86,6 +130,7 @@ fun DoctorDetailScreen(doctorId: String, onBack: () -> Unit) {
                                 experience = it.experience
                                 contactNumber = it.contactNumber
                                 description = it.description
+                                profilePictureUrl = it.profilePicture.ifEmpty { null }
                         }
                         slots = FirestoreHelper.getSlotsByDoctor(doctorId)
                         isLoading = false
@@ -100,7 +145,7 @@ fun DoctorDetailScreen(doctorId: String, onBack: () -> Unit) {
                                 },
                                 navigationIcon = {
                                         IconButton(onClick = onBack) {
-                                                Icon(Icons.Default.ArrowBack, "Back")
+                                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                                         }
                                 },
                                 actions = {
@@ -202,6 +247,17 @@ fun DoctorDetailScreen(doctorId: String, onBack: () -> Unit) {
                                         }
                                 }
                         )
+                },
+                floatingActionButton = {
+                        if (!isLoading && doctor != null) {
+                                FloatingActionButton(
+                                        onClick = { showDeleteConfirm = true },
+                                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                ) {
+                                        Icon(Icons.Default.Delete, "Delete Doctor")
+                                }
+                        }
                 }
         ) { padding ->
                 if (isLoading) {
@@ -224,22 +280,66 @@ fun DoctorDetailScreen(doctorId: String, onBack: () -> Unit) {
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                                // Avatar
+                                // Avatar / Profile Picture
                                 Box(
                                         modifier =
-                                                Modifier.size(100.dp)
-                                                        .background(
-                                                                MaterialTheme.colorScheme
-                                                                        .primaryContainer,
-                                                                CircleShape
-                                                        ),
+                                                Modifier.size(120.dp)
+                                                        .clickable(enabled = isEditing && !isUploadingImage) {
+                                                                imagePicker.launch("image/*")
+                                                        },
                                         contentAlignment = Alignment.Center
                                 ) {
-                                        Text(
-                                                text = name.take(2).uppercase(),
-                                                style = MaterialTheme.typography.headlineLarge,
-                                                color = MaterialTheme.colorScheme.primary
-                                        )
+                                        Surface(
+                                                shape = CircleShape,
+                                                modifier = Modifier.fillMaxSize(),
+                                                color = MaterialTheme.colorScheme.primaryContainer,
+                                                border = BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
+                                        ) {
+                                                when {
+                                                        isUploadingImage -> {
+                                                                CircularProgressIndicator(
+                                                                        modifier = Modifier.size(40.dp).padding(20.dp),
+                                                                        color = MaterialTheme.colorScheme.primary
+                                                                )
+                                                        }
+                                                        profilePictureUrl != null -> {
+                                                                AsyncImage(
+                                                                        model = ImageRequest.Builder(context)
+                                                                                .data(profilePictureUrl)
+                                                                                .crossfade(true)
+                                                                                .build(),
+                                                                        contentDescription = "Doctor Image",
+                                                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                                                        contentScale = ContentScale.Crop
+                                                                )
+                                                        }
+                                                        else -> {
+                                                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                                                        Text(
+                                                                                text = name.take(2).uppercase(),
+                                                                                style = MaterialTheme.typography.headlineLarge,
+                                                                                color = MaterialTheme.colorScheme.primary
+                                                                        )
+                                                                }
+                                                        }
+                                                }
+                                        }
+
+                                        if (isEditing) {
+                                                Surface(
+                                                        modifier = Modifier.align(Alignment.BottomEnd).size(36.dp),
+                                                        shape = CircleShape,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        shadowElevation = 4.dp
+                                                ) {
+                                                        Icon(
+                                                                Icons.Default.CameraAlt,
+                                                                null,
+                                                                tint = Color.White,
+                                                                modifier = Modifier.padding(8.dp)
+                                                        )
+                                                }
+                                        }
                                 }
 
                                 if (!isEditing) {
@@ -456,6 +556,41 @@ fun DoctorDetailScreen(doctorId: String, onBack: () -> Unit) {
                                         slots = FirestoreHelper.getSlotsByDoctor(doctorId)
                                 }
                                 showAddSlotDialog = false
+                        }
+                )
+        }
+
+        if (showDeleteConfirm) {
+                AlertDialog(
+                        onDismissRequest = { showDeleteConfirm = false },
+                        title = { Text("Delete Doctor Profile") },
+                        text = { Text("Are you sure you want to permanently delete Dr. $name? This will also remove all associated time slots.") },
+                        confirmButton = {
+                                Button(
+                                        onClick = {
+                                                isDeletingDoctor = true
+                                                scope.launch {
+                                                        val result = FirestoreHelper.deleteDoctor(doctorId)
+                                                        isDeletingDoctor = false
+                                                        result.fold(
+                                                                onSuccess = {
+                                                                        Toast.makeText(context, "Doctor deleted", Toast.LENGTH_SHORT).show()
+                                                                        onBack()
+                                                                },
+                                                                onFailure = { e ->
+                                                                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                                                }
+                                                        )
+                                                }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                ) {
+                                        if (isDeletingDoctor) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+                                        else Text("Delete")
+                                }
+                        },
+                        dismissButton = {
+                                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
                         }
                 )
         }

@@ -1,4 +1,4 @@
-package com.example.healthmate.ui.screens
+﻿package com.example.healthmate.ui.screens
 
 import android.content.Intent
 import androidx.compose.foundation.background
@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,9 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.healthmate.ChangePasswordActivity
 import com.example.healthmate.ProfileActivity
 import com.example.healthmate.admin.AdminEmergencyActivity
@@ -27,7 +32,13 @@ import com.example.healthmate.admin.DoctorDetailActivity
 import com.example.healthmate.auth.FirebaseAuthHelper
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.*
+import com.example.healthmate.presentation.admin.DayAppointmentCount
+import com.example.healthmate.presentation.admin.WeeklyAppointmentChart
+import com.example.healthmate.presentation.admin.UtilizationBar
 import com.example.healthmate.ui.components.HealthMateCard
+import com.example.healthmate.ui.components.StatusChip
+import com.example.healthmate.ui.theme.Spacing
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.launch
 
@@ -41,6 +52,7 @@ fun AdminHomeScreen() {
         var doctorsCount by remember { mutableStateOf(0) }
         var todaysAppointmentsCount by remember { mutableStateOf(0) }
         var todaysAppointments by remember { mutableStateOf<List<Appointment>>(emptyList()) }
+        var weeklyData by remember { mutableStateOf<List<DayAppointmentCount>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
 
         LaunchedEffect(Unit) {
@@ -52,6 +64,11 @@ fun AdminHomeScreen() {
                         doctorsCount = FirestoreHelper.getDoctorsCount()
                         todaysAppointmentsCount = FirestoreHelper.getTodaysAppointmentsCount()
                         todaysAppointments = FirestoreHelper.getTodaysAppointments().take(5)
+
+                        // Calculate weekly appointment data for chart
+                        val allAppointments = FirestoreHelper.getAllAppointments()
+                        weeklyData = calculateWeeklyAppointments(allAppointments)
+
                         isLoading = false
                 }
         }
@@ -65,8 +82,8 @@ fun AdminHomeScreen() {
 
         LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                contentPadding = PaddingValues(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xl)
         ) {
                 // 1. Welcome Header
                 item { AdminWelcomeBanner(userName) }
@@ -101,7 +118,53 @@ fun AdminHomeScreen() {
                         }
                 }
 
-                // 3. Quick Actions
+                // 3. Weekly Appointment Chart
+                item {
+                        HealthMateCard {
+                                WeeklyAppointmentChart(
+                                        data = weeklyData,
+                                        modifier = Modifier.padding(16.dp)
+                                )
+                        }
+                }
+
+                // 4. Utilization Overview
+                item {
+                        HealthMateCard {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                        Text(
+                                                text = "System Utilization",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(bottom = 16.dp)
+                                        )
+                                        val totalCapacity = doctorsCount * 8 // Assuming 8 slots per doctor
+                                        val utilizationRate = if (totalCapacity > 0) {
+                                                todaysAppointmentsCount.toFloat() / totalCapacity
+                                        } else 0f
+
+                                        UtilizationBar(
+                                                label = "Today's Slot Utilization",
+                                                progress = utilizationRate,
+                                                value = "${(utilizationRate * 100).toInt()}%",
+                                                color = when {
+                                                        utilizationRate < 0.3f -> Color(0xFFEF4444) // Red - Low
+                                                        utilizationRate < 0.7f -> Color(0xFFF59E0B) // Amber - Medium
+                                                        else -> Color(0xFF22C55E) // Green - High
+                                                }
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        UtilizationBar(
+                                                label = "Active Doctors",
+                                                progress = if (doctorsCount > 0) 1f else 0f,
+                                                value = "$doctorsCount active",
+                                                color = MaterialTheme.colorScheme.primary
+                                        )
+                                }
+                        }
+                }
+
+                // 5. Quick Actions
                 item {
                         Text(
                                 text = "Quick Actions",
@@ -177,7 +240,7 @@ fun KPICard(
         modifier: Modifier = Modifier,
         label: String,
         value: String,
-        icon: ImageVector,
+        icon: ImageVector??,
         color: Color
 ) {
         HealthMateCard(modifier = modifier, elevation = 2.dp) {
@@ -193,13 +256,15 @@ fun KPICard(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                        icon,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                if (icon != null) {
+                                        Icon(
+                                                icon,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                }
                                 Text(
                                         text = label,
                                         style = MaterialTheme.typography.labelMedium,
@@ -213,7 +278,10 @@ fun KPICard(
 @Composable
 fun AdminQuickActions() {
         val context = LocalContext.current
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
                 QuickActionCard(
                         modifier = Modifier.weight(1f),
                         label = "Users",
@@ -238,7 +306,7 @@ fun AdminQuickActions() {
                 QuickActionCard(
                         modifier = Modifier.weight(1f),
                         label = "Wellness",
-                        icon = Icons.Default.Article,
+                        icon = Icons.Default.Spa,
                         onClick = {
                                 context.startActivity(
                                         Intent(context, AdminWellnessActivity::class.java)
@@ -252,26 +320,36 @@ fun AdminQuickActions() {
 fun QuickActionCard(
         modifier: Modifier = Modifier,
         label: String,
-        icon: ImageVector,
+        icon: ImageVector?,
         color: Color = MaterialTheme.colorScheme.primary,
         onClick: () -> Unit
 ) {
-        HealthMateCard(modifier = modifier, onClick = onClick) {
+        HealthMateCard(
+            modifier = modifier.height(100.dp),
+            onClick = onClick
+        ) {
                 Column(
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.fillMaxSize().padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                 ) {
-                        Box(
-                                modifier =
-                                        Modifier.size(40.dp)
-                                                .background(color.copy(alpha = 0.1f), CircleShape),
-                                contentAlignment = Alignment.Center
-                        ) { Icon(icon, contentDescription = null, tint = color) }
-                        Spacer(modifier = Modifier.height(8.dp))
+                        if (icon != null) {
+                                Box(
+                                        modifier =
+                                                Modifier.size(44.dp)
+                                                        .background(
+                                                                color.copy(alpha = 0.1f),
+                                                                CircleShape
+                                                        ),
+                                        contentAlignment = Alignment.Center
+                                ) { Icon(icon, contentDescription = null, tint = color) }
+                                Spacer(modifier = Modifier.height(8.dp))
+                        }
                         Text(
                                 text = label,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
                         )
                 }
         }
@@ -369,7 +447,7 @@ fun NewDoctorCard(doctor: Doctor) {
                         modifier = Modifier.fillMaxWidth().padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                 ) {
-                        // Replaced Image with Avatar logic
+                        // Profile Picture / Avatar
                         Box(
                                 modifier =
                                         Modifier.size(64.dp)
@@ -379,12 +457,24 @@ fun NewDoctorCard(doctor: Doctor) {
                                                 ),
                                 contentAlignment = Alignment.Center
                         ) {
-                                Text(
-                                        text = doctor.name.take(2).uppercase(),
-                                        style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        fontWeight = FontWeight.Bold
-                                )
+                                if (doctor.profilePicture.isNotEmpty()) {
+                                        AsyncImage(
+                                                model = ImageRequest.Builder(context)
+                                                        .data(doctor.profilePicture)
+                                                        .crossfade(true)
+                                                        .build(),
+                                                contentDescription = "Doctor",
+                                                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                                contentScale = ContentScale.Crop
+                                        )
+                                } else {
+                                        Text(
+                                                text = doctor.name.take(2).uppercase(),
+                                                style = MaterialTheme.typography.titleLarge,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                fontWeight = FontWeight.Bold
+                                        )
+                                }
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
@@ -419,6 +509,8 @@ fun AdminAppointmentsScreen() {
         val scope = rememberCoroutineScope()
         var appointments by remember { mutableStateOf<List<Appointment>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
+        var selectedTabIndex by remember { mutableIntStateOf(0) }
+        var selectedAppointment by remember { mutableStateOf<Appointment?>(null) }
 
         LaunchedEffect(Unit) {
                 scope.launch {
@@ -434,17 +526,83 @@ fun AdminAppointmentsScreen() {
                 return
         }
 
-        LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) { items(appointments) { appointment -> AdminAppointmentDetailCard(appointment) } }
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        
+        val upcomingAppointments = appointments.filter { 
+            it.status.equals("CONFIRMED", ignoreCase = true) && it.date >= today 
+        }
+        val completedAppointments = appointments.filter { 
+            it.status.equals("COMPLETED", ignoreCase = true) || (it.status.equals("CONFIRMED", ignoreCase = true) && it.date < today) 
+        }
+        val cancelledAppointments = appointments.filter {
+            it.status.equals("CANCELLED", ignoreCase = true)
+        }
+
+        Column(modifier = Modifier.fillMaxSize()) {
+                TabRow(
+                        selectedTabIndex = selectedTabIndex,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.primary
+                ) {
+                        Tab(
+                                selected = selectedTabIndex == 0,
+                                onClick = { selectedTabIndex = 0 },
+                                text = { Text("Upcoming (${upcomingAppointments.size})") }
+                        )
+                        Tab(
+                                selected = selectedTabIndex == 1,
+                                onClick = { selectedTabIndex = 1 },
+                                text = { Text("Completed (${completedAppointments.size})") }
+                        )
+                        Tab(
+                                selected = selectedTabIndex == 2,
+                                onClick = { selectedTabIndex = 2 },
+                                text = { Text("Cancelled (${cancelledAppointments.size})") }
+                        )
+                }
+
+                val displayAppointments = when (selectedTabIndex) {
+                    0 -> upcomingAppointments
+                    1 -> completedAppointments
+                    2 -> cancelledAppointments
+                    else -> emptyList()
+                }
+
+                if (displayAppointments.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text(
+                                        "No appointments found",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                        }
+                } else {
+                        LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                                items(displayAppointments) { appointment ->
+                                        AdminAppointmentDetailCard(
+                                                appointment = appointment,
+                                                onClick = { selectedAppointment = appointment }
+                                        )
+                                }
+                        }
+                }
+        }
+
+        if (selectedAppointment != null) {
+                AdminAppointmentDetailDialog(
+                        appointment = selectedAppointment!!,
+                        onDismiss = { selectedAppointment = null }
+                )
+        }
 }
 
 @Composable
-fun AdminAppointmentDetailCard(appointment: Appointment) {
-        HealthMateCard {
-                Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+fun AdminAppointmentDetailCard(appointment: Appointment, onClick: () -> Unit) {
+        HealthMateCard(onClick = onClick) {
+                Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
                         Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -468,15 +626,94 @@ fun AdminAppointmentDetailCard(appointment: Appointment) {
                         }
                         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
-                        Text(
-                                "Doctor: ${appointment.doctorName}",
-                                style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                                "Patient: ${appointment.patientName}",
-                                style = MaterialTheme.typography.bodyMedium
-                        )
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                                "Doctor",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                                appointment.doctorName,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold
+                                        )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                                "Patient",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                                appointment.patientName,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold
+                                        )
+                                }
+                        }
                 }
+        }
+}
+
+@Composable
+fun AdminAppointmentDetailDialog(appointment: Appointment, onDismiss: () -> Unit) {
+        val scope = rememberCoroutineScope()
+        var patient by remember { mutableStateOf<User?>(null) }
+        var isLoading by remember { mutableStateOf(true) }
+
+        LaunchedEffect(appointment.patientId) {
+                scope.launch {
+                        patient = FirestoreHelper.getUserById(appointment.patientId)
+                        isLoading = false
+                }
+        }
+
+        AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text("Appointment Details") },
+                text = {
+                        if (isLoading) {
+                                Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator()
+                                }
+                        } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        DetailItem(label = "Patient Name", value = appointment.patientName)
+                                        patient?.let {
+                                                DetailItem(label = "Phone", value = it.phoneNumber.ifEmpty { "N/A" })
+                                                DetailItem(label = "Age/Gender", value = "${it.age} yrs / ${it.gender}")
+                                                DetailItem(label = "Blood Group", value = it.bloodGroup.ifEmpty { "N/A" })
+                                                DetailItem(label = "Address", value = it.address.ifEmpty { "N/A" })
+                                        }
+                                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                                        DetailItem(label = "Doctor", value = appointment.doctorName)
+                                        DetailItem(label = "Date", value = appointment.date)
+                                        DetailItem(label = "Time", value = appointment.time)
+                                        DetailItem(label = "Status", value = appointment.status)
+                                }
+                        }
+                },
+                confirmButton = {
+                        TextButton(onClick = onDismiss) { Text("Close") }
+                }
+        )
+}
+
+@Composable
+fun DetailItem(label: String, value: String) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                        "$label: ",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(100.dp)
+                )
+                Text(
+                        value,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
         }
 }
 
@@ -520,7 +757,7 @@ fun AdminSettingsScreen(onLogout: () -> Unit) {
                 }
 
                 item {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(Spacing.lg)) {
                                 SettingsCategory("Account")
                                 SettingsItem(
                                         icon = Icons.Default.Person,
@@ -546,7 +783,7 @@ fun AdminSettingsScreen(onLogout: () -> Unit) {
 
                                 SettingsCategory("App")
                                 SettingsItem(
-                                        icon = Icons.Default.Logout,
+                                        icon = Icons.AutoMirrored.Filled.Logout,
                                         title = "Logout",
                                         textColor = MaterialTheme.colorScheme.error,
                                         onClick = onLogout
@@ -570,7 +807,7 @@ fun SettingsCategory(title: String) {
 
 @Composable
 fun SettingsItem(
-        icon: ImageVector,
+        icon: ImageVector?,
         title: String,
         textColor: Color = MaterialTheme.colorScheme.onSurface,
         onClick: () -> Unit
@@ -580,8 +817,10 @@ fun SettingsItem(
                         modifier = Modifier.fillMaxWidth().padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                 ) {
-                        Icon(icon, contentDescription = null, tint = textColor)
-                        Spacer(modifier = Modifier.width(16.dp))
+                        if (icon != null) {
+                                Icon(icon, contentDescription = null, tint = textColor)
+                                Spacer(modifier = Modifier.width(16.dp))
+                        }
                         Text(
                                 text = title,
                                 style = MaterialTheme.typography.bodyLarge,
@@ -595,4 +834,36 @@ fun SettingsItem(
                         )
                 }
         }
+}
+
+// ==================== HELPER FUNCTIONS ====================
+
+/**
+ * Calculate weekly appointment data for the chart.
+ * Returns appointment counts for the last 7 days.
+ */
+private fun calculateWeeklyAppointments(appointments: List<Appointment>): List<DayAppointmentCount> {
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dayLabelFormat = SimpleDateFormat("EEE", Locale.getDefault())
+
+        val result = mutableListOf<DayAppointmentCount>()
+
+        // Go back 6 days to get last 7 days including today
+        calendar.add(Calendar.DAY_OF_YEAR, -6)
+
+        repeat(7) {
+                val dateStr = dateFormat.format(calendar.time)
+                val dayLabel = dayLabelFormat.format(calendar.time)
+
+                // Count appointments for this date
+                val count = appointments.count { appointment ->
+                        appointment.date == dateStr
+                }
+
+                result.add(DayAppointmentCount(dayLabel = dayLabel, date = dateStr, count = count))
+                calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
+
+        return result
 }

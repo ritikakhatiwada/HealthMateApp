@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +24,9 @@ import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.Doctor
 import com.example.healthmate.model.Slot
 import com.example.healthmate.ui.theme.HealthMateTheme
+import com.example.healthmate.ui.components.HealthMateTopBar
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
 class AdminDoctorsActivity : ComponentActivity() {
@@ -63,11 +67,10 @@ fun AdminDoctorsScreen(onAddDoctor: () -> Unit, onBack: () -> Unit) {
 
     Scaffold(
             topBar = {
-                TopAppBar(
-                        title = { Text("Doctors Management") },
-                        navigationIcon = {
-                            IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") }
-                        }
+                HealthMateTopBar(
+                        title = "Doctors Management",
+                        navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                        onNavigationClick = onBack
                 )
             },
             floatingActionButton = {
@@ -82,8 +85,8 @@ fun AdminDoctorsScreen(onAddDoctor: () -> Unit, onBack: () -> Unit) {
                     Text("No doctors found.", modifier = Modifier.align(Alignment.Center))
                 } else {
                     LazyColumn(
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            contentPadding = PaddingValues(Spacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
                         items(doctors) { doctor ->
                             DoctorCardWithSlots(
@@ -124,7 +127,11 @@ fun AdminDoctorsScreen(onAddDoctor: () -> Unit, onBack: () -> Unit) {
 
 @Composable
 fun DoctorCardWithSlots(doctor: Doctor, onAddSlot: () -> Unit, onViewSlots: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(4.dp)) {
+    Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = HealthMateShapes.CardLarge,
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                     doctor.name,
@@ -134,7 +141,7 @@ fun DoctorCardWithSlots(doctor: Doctor, onAddSlot: () -> Unit, onViewSlots: () -
             Text(
                     doctor.specialization,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row {

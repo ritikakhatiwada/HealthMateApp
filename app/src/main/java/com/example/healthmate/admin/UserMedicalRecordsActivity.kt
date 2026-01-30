@@ -10,8 +10,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.MedicalRecord
+import com.example.healthmate.ui.components.HealthMateTopBar
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
 import com.example.healthmate.ui.theme.HealthMateTheme
 import java.text.SimpleDateFormat
 import java.util.*
@@ -36,7 +42,11 @@ class UserMedicalRecordsActivity : ComponentActivity() {
         val userName = intent.getStringExtra("userName") ?: "User"
 
         enableEdgeToEdge()
-        setContent { HealthMateTheme { UserMedicalRecordsScreen(userId, userName) } }
+        setContent {
+            val themeManager = com.example.healthmate.util.ThemeManager(this)
+            val isDarkMode by themeManager.isDarkMode.collectAsState(initial = false)
+            HealthMateTheme(darkTheme = isDarkMode) { UserMedicalRecordsScreen(userId, userName) }
+        }
     }
 }
 
@@ -45,11 +55,13 @@ class UserMedicalRecordsActivity : ComponentActivity() {
 fun UserMedicalRecordsScreen(userId: String, userName: String) {
     val context = LocalContext.current
     var records by remember { mutableStateOf<List<MedicalRecord>>(emptyList()) }
+    var userProfile by remember { mutableStateOf<com.example.healthmate.model.User?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
+            userProfile = FirestoreHelper.getUserById(userId)
             records = FirestoreHelper.getUserMedicalRecords(userId)
             isLoading = false
         }
@@ -57,26 +69,11 @@ fun UserMedicalRecordsScreen(userId: String, userName: String) {
 
     Scaffold(
             topBar = {
-                TopAppBar(
-                        title = {
-                            Column {
-                                Text("Medical Records", color = Color.White, fontSize = 18.sp)
-                                Text(
-                                        userName,
-                                        color = Color.White.copy(alpha = 0.8f),
-                                        fontSize = 14.sp
-                                )
-                            }
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = { (context as? ComponentActivity)?.finish() }) {
-                                Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
-                            }
-                        },
-                        colors =
-                                TopAppBarDefaults.topAppBarColors(
-                                        containerColor = Color(0xFF1976D2)
-                                )
+                HealthMateTopBar(
+                        title = "Medical Records",
+                        subtitle = userName,
+                        navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                        onNavigationClick = { (context as? ComponentActivity)?.finish() }
                 )
             }
     ) { padding ->
@@ -85,35 +82,53 @@ fun UserMedicalRecordsScreen(userId: String, userName: String) {
                 isLoading -> {
                     CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center),
-                            color = Color(0xFF1976D2)
+                            color = MaterialTheme.colorScheme.primary
                     )
-                }
-                records.isEmpty() -> {
-                    Column(
-                            modifier = Modifier.fillMaxSize().padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                                imageVector = Icons.Default.Description,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "No medical records", fontSize = 18.sp, color = Color.Gray)
-                    }
                 }
                 else -> {
                     LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            contentPadding = PaddingValues(Spacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
-                        items(records) { record ->
-                            AdminRecordCard(record = record) {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(record.fileUrl))
-                                context.startActivity(intent)
+                        // User Profile Header
+                        item {
+                            UserProfileHeader(userProfile, userName)
+                            Spacer(modifier = Modifier.height(Spacing.lg))
+                            Text(
+                                "Medical History",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        if (records.isEmpty()) {
+                            item {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Description,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(64.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    )
+                                    Spacer(modifier = Modifier.height(Spacing.md))
+                                    Text(
+                                        text = "No medical records found",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        } else {
+                            items(records) { record ->
+                                AdminRecordCard(record = record) {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(record.fileUrl))
+                                    context.startActivity(intent)
+                                }
                             }
                         }
                     }
@@ -129,8 +144,8 @@ fun AdminRecordCard(record: MedicalRecord, onClick: () -> Unit) {
 
     Card(
             modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            shape = HealthMateShapes.CardLarge,
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -140,27 +155,103 @@ fun AdminRecordCard(record: MedicalRecord, onClick: () -> Unit) {
                     imageVector = Icons.Default.PictureAsPdf,
                     contentDescription = null,
                     modifier = Modifier.size(40.dp),
-                    tint = Color.Red
+                    tint = MaterialTheme.colorScheme.error
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Spacing.md))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                         text = record.fileName,
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1
                 )
                 Text(
                         text = dateFormat.format(Date(record.uploadedAt)),
-                        fontSize = 12.sp,
-                        color = Color.Gray
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Icon(
-                    imageVector = Icons.Default.OpenInNew,
+                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
                     contentDescription = "Open",
-                    tint = Color(0xFF1976D2)
+                    tint = MaterialTheme.colorScheme.primary
             )
         }
+    }
+}
+
+@Composable
+fun UserProfileHeader(user: com.example.healthmate.model.User?, defaultName: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = HealthMateShapes.CardLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    shape = CircleShape,
+                    modifier = Modifier.size(64.dp),
+                    color = MaterialTheme.colorScheme.primary
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = (user?.name ?: defaultName).take(1).uppercase(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = user?.name ?: defaultName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = user?.email ?: "No email",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth()) {
+                InfoItem(modifier = Modifier.weight(1f), label = "Age", value = user?.age?.ifEmpty { "N/A" } ?: "N/A")
+                InfoItem(modifier = Modifier.weight(1f), label = "Gender", value = user?.gender?.ifEmpty { "N/A" } ?: "N/A")
+                InfoItem(modifier = Modifier.weight(1f), label = "Blood", value = user?.bloodGroup?.ifEmpty { "N/A" } ?: "N/A")
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            InfoItem(label = "Phone", value = user?.phoneNumber?.ifEmpty { "N/A" } ?: "N/A")
+            Spacer(modifier = Modifier.height(8.dp))
+            InfoItem(label = "Address", value = user?.address?.ifEmpty { "N/A" } ?: "N/A")
+        }
+    }
+}
+
+@Composable
+fun InfoItem(modifier: Modifier = Modifier, label: String, value: String) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }

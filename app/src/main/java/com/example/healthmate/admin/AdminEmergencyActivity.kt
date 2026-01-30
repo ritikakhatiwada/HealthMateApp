@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +32,7 @@ class AdminEmergencyActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val themeManager = ThemeManager(this)
+            val themeManager = com.example.healthmate.util.ThemeManager(this)
             val isDarkMode by themeManager.isDarkMode.collectAsState(initial = false)
             HealthMateTheme(darkTheme = isDarkMode) { AdminEmergencyScreen() }
         }
@@ -89,23 +90,26 @@ fun AdminEmergencyScreen() {
     Scaffold(
             topBar = {
                 TopAppBar(
-                        title = { Text("Emergency Contacts", color = Color.White) },
+                        title = { Text("Emergency Contacts") },
                         navigationIcon = {
                             IconButton(onClick = { (context as? ComponentActivity)?.finish() }) {
-                                Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                             }
                         },
                         colors =
                                 TopAppBarDefaults.topAppBarColors(
-                                        containerColor = MaterialTheme.colorScheme.primary
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                                 )
                 )
             },
             floatingActionButton = {
                 FloatingActionButton(
                         onClick = { showAddDialog = true },
-                        containerColor = MaterialTheme.colorScheme.primary
-                ) { Icon(Icons.Default.Add, "Add Contact", tint = Color.White) }
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) { Icon(Icons.Default.Add, "Add Contact") }
             }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -126,11 +130,19 @@ fun AdminEmergencyScreen() {
                                 imageVector = Icons.Default.Warning,
                                 contentDescription = null,
                                 modifier = Modifier.size(64.dp),
-                                tint = Color.Gray
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "No emergency contacts", fontSize = 18.sp, color = Color.Gray)
-                        Text(text = "Tap + to add a contact", fontSize = 14.sp, color = Color.Gray)
+                        Text(
+                            text = "No emergency contacts", 
+                            style = MaterialTheme.typography.titleMedium, 
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Tap + to add a contact", 
+                            style = MaterialTheme.typography.bodyMedium, 
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
                     }
                 }
                 else -> {
@@ -176,9 +188,22 @@ fun AdminEmergencyCard(contact: EmergencyContact, onDelete: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = contact.name, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(text = contact.number, fontSize = 14.sp, color = Color.Gray)
-                Text(text = contact.type, fontSize = 12.sp, color = Color(0xFFF44336))
+                Text(
+                    text = contact.name, 
+                    style = MaterialTheme.typography.titleMedium, 
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = contact.number, 
+                    style = MaterialTheme.typography.bodyMedium, 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = contact.type, 
+                    style = MaterialTheme.typography.labelMedium, 
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
             IconButton(onClick = onDelete) {
                 Icon(
