@@ -1,38 +1,171 @@
 package com.example.healthmate.ui.screens
 
+import android.app.Activity
 import android.content.Intent
+import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import android.widget.Toast
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Emergency
+import androidx.compose.material.icons.filled.EventAvailable
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.LocalHospital
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.healthmate.ChangePasswordActivity
 import com.example.healthmate.ChatbotBody
 import com.example.healthmate.ProfileActivity
+import com.example.healthmate.R
 import com.example.healthmate.auth.FirebaseAuthHelper
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.emergency.EmergencySOSActivity
-import com.example.healthmate.model.*
+import com.example.healthmate.hospitals.HospitalLocatorActivity
+import com.example.healthmate.model.Appointment
+import com.example.healthmate.model.Reminder
 import com.example.healthmate.records.MedicalRecordsActivity
 import com.example.healthmate.reminders.MedicationRemindersActivity
+import com.example.healthmate.ui.components.AddReminderDialog
+import com.example.healthmate.ui.components.BadgeSize
+import com.example.healthmate.ui.components.DashboardSkeleton
+import com.example.healthmate.ui.components.ReminderCard
+import com.example.healthmate.ui.components.StatusBadge
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
+import com.example.healthmate.util.LocationHelper
+import com.example.healthmate.util.ReminderUtils
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+
+// ==================== LOCATION HEADER (Flipkart/Amazon Style) ====================
+@Composable
+fun LocationHeader(location: String, onLocationClick: () -> Unit = {}) {
+        Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp
+        ) {
+                Row(
+                        modifier =
+                                Modifier.fillMaxWidth()
+                                        .clickable(onClick = onLocationClick)
+                                        .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                        verticalAlignment = Alignment.CenterVertically
+                ) {
+                        Icon(
+                                imageVector = Icons.Outlined.LocationOn,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.sm))
+                        Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                        text = "Current Location",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                        text = location,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                )
+                        }
+                        Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Expand location",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                        )
+                }
+        }
+}
 
 // ==================== USER CHAT SCREEN ====================
 @Composable
@@ -40,613 +173,1145 @@ fun UserChatScreen() {
         ChatbotBody()
 }
 
-// ==================== USER HOME SCREEN ====================
+// ==================== REDESIGNED USER HOME SCREEN ====================
 @Composable
 fun UserHomeScreen(
         onNavigateToAppointments: () -> Unit,
         onNavigateToRecords: () -> Unit,
-        onNavigateToWellness: () -> Unit
+        onNavigateToReminders: () -> Unit,
+        onNavigateToWellness: () -> Unit,
+        refreshKey: Int = 0 // Add refresh trigger
 ) {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
         var userName by remember { mutableStateOf("") }
+        var userProfilePicture by remember { mutableStateOf<String?>(null) }
+        var userLocation by remember { mutableStateOf("Detecting location...") }
         var appointments by remember { mutableStateOf<List<Appointment>>(emptyList()) }
-        var records by remember { mutableStateOf<List<MedicalRecord>>(emptyList()) }
-        var articles by remember { mutableStateOf<List<WellnessResource>>(emptyList()) }
+        var appointmentCount by remember { mutableIntStateOf(0) }
+        var recordCount by remember { mutableIntStateOf(0) }
+        var reminderCount by remember { mutableIntStateOf(0) }
         var isLoading by remember { mutableStateOf(true) }
+        var animationTrigger by remember { mutableStateOf(false) }
 
+        // Health tips rotation
+        val healthTips =
+                listOf(
+                        "Stay hydrated! Drink at least 8 glasses of water today.",
+                        "Take a 10-minute walk to boost your energy levels.",
+                        "Remember to take deep breaths to reduce stress.",
+                        "Get 7-8 hours of sleep for optimal health.",
+                        "Eat more fruits and vegetables for better immunity."
+                )
+        var currentTipIndex by remember { mutableIntStateOf(0) }
+
+        // Rotate health tips
         LaunchedEffect(Unit) {
-                scope.launch {
-                        android.util.Log.d("UserHomeScreen", "========================================")
-                        android.util.Log.d("UserHomeScreen", "Loading User Dashboard")
-                        android.util.Log.d("UserHomeScreen", "========================================")
+                while (true) {
+                        delay(8000)
+                        currentTipIndex = (currentTipIndex + 1) % healthTips.size
+                }
+        }
 
-                        // Auto-update appointment statuses first
-                        android.util.Log.d("UserHomeScreen", "Running auto-update appointment statuses...")
+        LaunchedEffect(refreshKey) { // Reload data when refreshKey changes
+                scope.launch {
+                        // Auto-update appointment statuses
                         FirestoreHelper.autoUpdateAppointmentStatuses()
 
                         val userId = FirebaseAuthHelper.getCurrentUserId()
-                        android.util.Log.d("UserHomeScreen", "Current User ID: $userId")
-
                         val user = FirestoreHelper.getUserById(userId)
                         userName = user?.name ?: ""
-                        android.util.Log.d("UserHomeScreen", "User Name: $userName")
+                        userProfilePicture = user?.profilePicture
 
-                        // Get all appointments and filter for upcoming only
+                        // Get user location
+                        val locationHelper = LocationHelper(context)
+                        if (locationHelper.hasLocationPermission()) {
+                                try {
+                                        val location = locationHelper.getCurrentLocation()
+                                        location?.let {
+                                                userLocation =
+                                                        locationHelper.getShortLocationName(
+                                                                it.latitude,
+                                                                it.longitude
+                                                        )
+                                        }
+                                                ?: run { userLocation = "Location unavailable" }
+                                } catch (e: Exception) {
+                                        userLocation = "Location unavailable"
+                                }
+                        } else {
+                                userLocation = "Enable location"
+                        }
+
+                        // Get all appointments and filter for upcoming
                         val allAppointments = FirestoreHelper.getUserAppointments(userId)
-                        android.util.Log.d("UserHomeScreen", "Total appointments fetched: ${allAppointments.size}")
+                        val today =
+                                java.text.SimpleDateFormat(
+                                                "yyyy-MM-dd",
+                                                java.util.Locale.getDefault()
+                                        )
+                                        .format(java.util.Date())
 
-                        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                                .format(java.util.Date())
-                        android.util.Log.d("UserHomeScreen", "Today's date: $today")
+                        appointments =
+                                allAppointments
+                                        .filter { appointment ->
+                                                appointment.status.equals(
+                                                        "CONFIRMED",
+                                                        ignoreCase = true
+                                                ) && appointment.date >= today
+                                        }
+                                        .take(3)
 
-                        // Log each appointment
-                        allAppointments.forEachIndexed { index, app ->
-                                android.util.Log.d("UserHomeScreen", "Appointment #$index:")
-                                android.util.Log.d("UserHomeScreen", "  - ID: ${app.id}")
-                                android.util.Log.d("UserHomeScreen", "  - Doctor: ${app.doctorName}")
-                                android.util.Log.d("UserHomeScreen", "  - Date: ${app.date}")
-                                android.util.Log.d("UserHomeScreen", "  - Time: ${app.time}")
-                                android.util.Log.d("UserHomeScreen", "  - Status: ${app.status}")
-                                android.util.Log.d("UserHomeScreen", "  - Date >= Today: ${app.date >= today}")
-                                android.util.Log.d("UserHomeScreen", "  - Is CONFIRMED: ${app.status.equals("CONFIRMED", ignoreCase = true)}")
-                        }
+                        appointmentCount =
+                                allAppointments
+                                        .filter {
+                                                it.status.equals("CONFIRMED", ignoreCase = true) &&
+                                                        it.date >= today
+                                        }
+                                        .size
 
-                        appointments = allAppointments.filter { appointment ->
-                                val isConfirmed = appointment.status.equals("CONFIRMED", ignoreCase = true)
-                                val isFutureOrToday = appointment.date >= today
-                                val shouldShow = isConfirmed && isFutureOrToday
+                        recordCount = FirestoreHelper.getUserMedicalRecords(userId).size
+                        reminderCount = FirestoreHelper.getUserReminders(userId).size
 
-                                android.util.Log.d("UserHomeScreen", "Filtering appointment with ${appointment.doctorName}: isConfirmed=$isConfirmed, isFutureOrToday=$isFutureOrToday, shouldShow=$shouldShow")
-
-                                shouldShow
-                        }.take(3)
-
-                        android.util.Log.d("UserHomeScreen", "Filtered upcoming appointments: ${appointments.size}")
-                        appointments.forEach { app ->
-                                android.util.Log.d("UserHomeScreen", "  - Showing: ${app.doctorName} on ${app.date}")
-                        }
-
-                        records = FirestoreHelper.getUserMedicalRecords(userId).take(3)
-                        articles = FirestoreHelper.getWellnessResources().take(3)
                         isLoading = false
-
-                        android.util.Log.d("UserHomeScreen", "========================================")
-                        android.util.Log.d("UserHomeScreen", "Dashboard Loading Complete")
-                        android.util.Log.d("UserHomeScreen", "========================================")
+                        delay(100)
+                        animationTrigger = true
                 }
         }
 
         if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
+                DashboardSkeleton()
                 return
         }
 
         LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                contentPadding = PaddingValues(bottom = Spacing.xxl)
         ) {
-                // Welcome Banner
-                item { WelcomeBanner(userName = userName) }
+                // Location Header (Flipkart/Amazon Style)
+                item { LocationHeader(location = userLocation) }
 
-                // Quick Actions
+                // Premium Hero Section with Gradient
                 item {
-                        QuickActionsRow(
-                                onMedicalRecords = {
-                                        context.startActivity(
-                                                Intent(context, MedicalRecordsActivity::class.java)
-                                        )
-                                },
-                                onEmergency = {
-                                        context.startActivity(
-                                                Intent(context, EmergencySOSActivity::class.java)
-                                        )
-                                },
-                                onReminders = {
-                                        context.startActivity(
-                                                Intent(
-                                                        context,
-                                                        MedicationRemindersActivity::class.java
-                                                )
-                                        )
-                                }
-                        )
-                }
-
-                // Upcoming Appointments Section
-                item {
-                        SectionHeader(
-                                title = "Upcoming Appointments",
-                                onViewAll = onNavigateToAppointments
-                        )
-                }
-
-                if (appointments.isEmpty()) {
-                        item {
-                                EmptyStateCard(
-                                        icon = Icons.Default.CalendarMonth,
-                                        message = "No upcoming appointments"
+                        AnimatedVisibility(
+                                visible = animationTrigger,
+                                enter =
+                                        fadeIn(tween(400)) +
+                                                slideInVertically(tween(400)) { -it / 2 }
+                        ) {
+                                PremiumHeroSection(
+                                        userName = userName,
+                                        profilePictureUrl = userProfilePicture,
+                                        healthTip = healthTips[currentTipIndex]
                                 )
                         }
-                } else {
-                        items(appointments) { appointment ->
-                                AppointmentCard(
-                                        appointment = appointment,
-                                        onCancelled = {
-                                                // Refresh appointments list
-                                                scope.launch {
-                                                        val userId = FirebaseAuthHelper.getCurrentUserId()
-                                                        val allAppointments = FirestoreHelper.getUserAppointments(userId)
-                                                        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                                                                .format(java.util.Date())
+                }
 
-                                                        appointments = allAppointments.filter { app ->
-                                                                app.status.equals("CONFIRMED", ignoreCase = true) &&
-                                                                app.date >= today
-                                                        }.take(3)
+                // Health Stats Cards
+                item {
+                        Spacer(modifier = Modifier.height(Spacing.lg))
+                        AnimatedVisibility(
+                                visible = animationTrigger,
+                                enter = fadeIn(tween(600, delayMillis = 200))
+                        ) {
+                                HealthStatsRow(
+                                        appointmentCount = appointmentCount,
+                                        recordCount = recordCount,
+                                        reminderCount = reminderCount,
+                                        onAppointmentsClick = onNavigateToAppointments,
+                                        onRecordsClick = onNavigateToRecords,
+                                        onRemindersClick = onNavigateToReminders
+                                )
+                        }
+                }
+
+                // Quick Actions Grid - Modern Design
+                item {
+                        Spacer(modifier = Modifier.height(Spacing.xl))
+                        AnimatedVisibility(
+                                visible = animationTrigger,
+                                enter = fadeIn(tween(600, delayMillis = 300))
+                        ) {
+                                Column {
+                                        Text(
+                                                text = "Quick Actions",
+                                                style = MaterialTheme.typography.titleLarge,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onBackground,
+                                                modifier = Modifier.padding(horizontal = Spacing.xl)
+                                        )
+                                        Spacer(modifier = Modifier.height(Spacing.md))
+                                        ModernQuickActionsGrid(
+                                                onMedicalRecords = onNavigateToRecords,
+                                                onEmergencySOS = {
+                                                        context.startActivity(
+                                                                Intent(
+                                                                        context,
+                                                                        EmergencySOSActivity::class
+                                                                                .java
+                                                                )
+                                                        )
+                                                },
+                                                onReminders = {
+                                                        context.startActivity(
+                                                                Intent(
+                                                                        context,
+                                                                        MedicationRemindersActivity::class
+                                                                                .java
+                                                                )
+                                                        )
+                                                },
+                                                onHealthTips = onNavigateToWellness,
+                                                onHospitalLocator = {
+                                                        context.startActivity(
+                                                                Intent(
+                                                                        context,
+                                                                        HospitalLocatorActivity::class
+                                                                                .java
+                                                                )
+                                                        )
+                                                }
+                                        )
+                                }
+                        }
+                }
+
+                // Upcoming Appointments Section - Enhanced
+                item {
+                        Spacer(modifier = Modifier.height(Spacing.xl))
+                        AnimatedVisibility(
+                                visible = animationTrigger,
+                                enter = fadeIn(tween(600, delayMillis = 400))
+                        ) {
+                                Column {
+                                        Row(
+                                                modifier =
+                                                        Modifier.fillMaxWidth()
+                                                                .padding(horizontal = Spacing.lg),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                                Row(
+                                                        verticalAlignment =
+                                                                Alignment.CenterVertically
+                                                ) {
+                                                        Icon(
+                                                                imageVector =
+                                                                        Icons.Default.CalendarMonth,
+                                                                contentDescription = null,
+                                                                tint =
+                                                                        MaterialTheme.colorScheme
+                                                                                .primary,
+                                                                modifier = Modifier.size(24.dp)
+                                                        )
+                                                        Spacer(
+                                                                modifier =
+                                                                        Modifier.width(Spacing.sm)
+                                                        )
+                                                        Text(
+                                                                text = "Upcoming Appointments",
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .titleLarge,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color =
+                                                                        MaterialTheme.colorScheme
+                                                                                .onBackground
+                                                        )
+                                                }
+                                                TextButton(onClick = onNavigateToAppointments) {
+                                                        Text(
+                                                                text = "View All",
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .labelMedium,
+                                                                color =
+                                                                        MaterialTheme.colorScheme
+                                                                                .primary,
+                                                                fontWeight = FontWeight.SemiBold
+                                                        )
                                                 }
                                         }
-                                )
-                        }
-                }
 
-                // Medical Records Section
-                item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        SectionHeader(
-                                title = "Medical Records",
-                                onViewAll = {
-                                        context.startActivity(
-                                                Intent(context, MedicalRecordsActivity::class.java)
-                                        )
+                                        Spacer(modifier = Modifier.height(Spacing.md))
+
+                                        if (appointments.isEmpty()) {
+                                                PremiumEmptyState(
+                                                        icon = Icons.Default.EventAvailable,
+                                                        title = "No Upcoming Appointments",
+                                                        message =
+                                                                "Book an appointment with our specialist doctors",
+                                                        actionLabel = "Book Now",
+                                                        onAction = onNavigateToAppointments
+                                                )
+                                        } else {
+                                                appointments.forEach { appointment ->
+                                                        PremiumAppointmentCard(
+                                                                appointment = appointment,
+                                                                onCancel = {
+                                                                        scope.launch {
+                                                                                val userId =
+                                                                                        FirebaseAuthHelper
+                                                                                                .getCurrentUserId()
+                                                                                val allAppointments =
+                                                                                        FirestoreHelper
+                                                                                                .getUserAppointments(
+                                                                                                        userId
+                                                                                                )
+                                                                                val today =
+                                                                                        java.text
+                                                                                                .SimpleDateFormat(
+                                                                                                        "yyyy-MM-dd",
+                                                                                                        java.util
+                                                                                                                .Locale
+                                                                                                                .getDefault()
+                                                                                                )
+                                                                                                .format(
+                                                                                                        java.util
+                                                                                                                .Date()
+                                                                                                )
+
+                                                                                appointments =
+                                                                                        allAppointments
+                                                                                                .filter {
+                                                                                                        app
+                                                                                                        ->
+                                                                                                        app.status
+                                                                                                                .equals(
+                                                                                                                        "CONFIRMED",
+                                                                                                                        ignoreCase =
+                                                                                                                                true
+                                                                                                                ) &&
+                                                                                                                app.date >=
+                                                                                                                        today
+                                                                                                }
+                                                                                                .take(
+                                                                                                        3
+                                                                                                )
+                                                                        }
+                                                                }
+                                                        )
+                                                        Spacer(
+                                                                modifier =
+                                                                        Modifier.height(Spacing.md)
+                                                        )
+                                                }
+                                        }
                                 }
-                        )
-                }
-
-                if (records.isEmpty()) {
-                        item {
-                                EmptyStateCard(
-                                        icon = Icons.Default.FolderOpen,
-                                        message = "No medical records yet"
-                                )
                         }
-                } else {
-                        items(records) { record -> MedicalRecordCard(record = record) }
                 }
 
-                // Wellness Articles Section
-                item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        SectionHeader(title = "Health Tips", onViewAll = onNavigateToWellness)
-                }
-
-                if (articles.isEmpty()) {
-                        item {
-                                EmptyStateCard(
-                                        icon = Icons.Default.Article,
-                                        message = "No articles available"
-                                )
-                        }
-                } else {
-                        items(articles) { article -> ArticleCard(article = article) }
-                }
-
-                item { Spacer(modifier = Modifier.height(16.dp)) }
+                item { Spacer(modifier = Modifier.height(Spacing.lg)) }
         }
 }
 
+// ============================================
+// PREMIUM HERO SECTION
+// ============================================
 @Composable
-fun WelcomeBanner(userName: String) {
-        Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-        ) {
-                Box(
-                        modifier =
-                                Modifier.fillMaxWidth()
-                                        .background(
-                                                brush =
-                                                        Brush.horizontalGradient(
-                                                                colors =
-                                                                        listOf(
-                                                                                MaterialTheme
-                                                                                        .colorScheme
-                                                                                        .primary,
-                                                                                MaterialTheme
-                                                                                        .colorScheme
-                                                                                        .tertiary
-                                                                        )
-                                                        ),
-                                                shape = RoundedCornerShape(20.dp)
-                                        )
-                                        .padding(24.dp)
-                ) {
-                        Column {
-                                Text(
-                                        text =
-                                                "👋 Welcome Back${if (userName.isNotBlank()) ", $userName" else ""}!",
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                        text = "How can we help you today?",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = Color.White.copy(alpha = 0.9f)
-                                )
-                        }
-                }
-        }
-}
-
-@Composable
-fun QuickActionsRow(
-        onMedicalRecords: () -> Unit,
-        onEmergency: () -> Unit,
-        onReminders: () -> Unit
-) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                QuickActionItem(
-                        icon = Icons.Default.FolderOpen,
-                        label = "Records",
-                        color = MaterialTheme.colorScheme.primary,
-                        onClick = onMedicalRecords
-                )
-                QuickActionItem(
-                        icon = Icons.Default.Emergency,
-                        label = "Emergency",
-                        color = Color(0xFFE53935),
-                        onClick = onEmergency
-                )
-                QuickActionItem(
-                        icon = Icons.Default.Alarm,
-                        label = "Reminders",
-                        color = MaterialTheme.colorScheme.tertiary,
-                        onClick = onReminders
-                )
-        }
-}
-
-@Composable
-fun QuickActionItem(icon: ImageVector, label: String, color: Color, onClick: () -> Unit) {
-        Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+private fun PremiumHeroSection(userName: String, profilePictureUrl: String?, healthTip: String) {
+        Box(
                 modifier =
-                        Modifier.clip(RoundedCornerShape(16.dp))
-                                .clickable(onClick = onClick)
-                                .padding(12.dp)
+                        Modifier.fillMaxWidth()
+                                .background(
+                                        brush =
+                                                Brush.verticalGradient(
+                                                        colors =
+                                                                listOf(
+                                                                        MaterialTheme.colorScheme
+                                                                                .primary,
+                                                                        MaterialTheme.colorScheme
+                                                                                .primary.copy(
+                                                                                alpha = 0.85f
+                                                                        )
+                                                                )
+                                                )
+                                )
+                                .padding(horizontal = Spacing.lg, vertical = Spacing.md)
         ) {
-                Box(
-                        modifier =
-                                Modifier.size(56.dp)
-                                        .background(color.copy(alpha = 0.15f), CircleShape),
-                        contentAlignment = Alignment.Center
-                ) {
-                        Icon(
-                                imageVector = icon,
-                                contentDescription = label,
-                                tint = color,
-                                modifier = Modifier.size(28.dp)
-                        )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                )
-        }
-}
-
-@Composable
-fun SectionHeader(title: String, onViewAll: () -> Unit) {
-        Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-                Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                )
-                TextButton(onClick = onViewAll) {
-                        Text("View All")
-                        Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                        )
-                }
-        }
-}
-
-@Composable
-fun EmptyStateCard(icon: ImageVector, message: String) {
-        Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                        )
-        ) {
-                Row(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                ) {
-                        Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                                text = message,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                }
-        }
-}
-
-@Composable
-fun AppointmentCard(appointment: Appointment, onCancelled: () -> Unit = {}) {
-        val scope = rememberCoroutineScope()
-        val context = LocalContext.current
-        var showCancelDialog by remember { mutableStateOf(false) }
-
-        Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Column {
                         Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                         ) {
-                                Box(
-                                        modifier =
-                                                Modifier.size(48.dp)
-                                                        .background(
-                                                                MaterialTheme.colorScheme.primaryContainer,
-                                                                RoundedCornerShape(12.dp)
-                                                        ),
-                                        contentAlignment = Alignment.Center
-                                ) {
-                                        Icon(
-                                                imageVector = Icons.Default.CalendarMonth,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary
-                                        )
-                                }
-                                Spacer(modifier = Modifier.width(16.dp))
+                                // User Info
                                 Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                                text = appointment.doctorName,
-                                                style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = FontWeight.SemiBold
+                                                text = getGreeting(),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color.White.copy(alpha = 0.85f),
+                                                fontWeight = FontWeight.Medium
                                         )
                                         Text(
-                                                text = "${appointment.date} • ${appointment.time}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                text = userName.ifEmpty { "User" },
+                                                style = MaterialTheme.typography.headlineSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White,
+                                                fontSize = 22.sp
                                         )
                                 }
-                                StatusChip(status = appointment.status)
-                        }
 
-                        // Show cancel button only for CONFIRMED appointments
-                        if (appointment.status.equals("CONFIRMED", ignoreCase = true)) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                OutlinedButton(
-                                        onClick = { showCancelDialog = true },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        colors = ButtonDefaults.outlinedButtonColors(
-                                                contentColor = Color(0xFFE53935)
-                                        ),
-                                        shape = RoundedCornerShape(8.dp)
+                                // Profile Picture
+                                Surface(
+                                        shape = CircleShape,
+                                        modifier = Modifier.size(48.dp),
+                                        color = Color.White.copy(alpha = 0.2f),
+                                        border =
+                                                BorderStroke(1.5.dp, Color.White.copy(alpha = 0.4f))
                                 ) {
-                                        Icon(
-                                                Icons.Default.Cancel,
-                                                contentDescription = "Cancel",
-                                                modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Cancel", style = MaterialTheme.typography.labelMedium)
+                                        if (profilePictureUrl != null) {
+                                                AsyncImage(
+                                                        model =
+                                                                ImageRequest.Builder(
+                                                                                LocalContext.current
+                                                                        )
+                                                                        .data(profilePictureUrl)
+                                                                        .crossfade(true)
+                                                                        .build(),
+                                                        contentDescription = "Profile",
+                                                        modifier = Modifier.fillMaxSize(),
+                                                        contentScale = ContentScale.Crop
+                                                )
+                                        } else {
+                                                Icon(
+                                                        imageVector = Icons.Default.Person,
+                                                        contentDescription = null,
+                                                        tint = Color.White,
+                                                        modifier = Modifier.padding(10.dp)
+                                                )
+                                        }
                                 }
                         }
-                }
-        }
 
-        if (showCancelDialog) {
-                AlertDialog(
-                        onDismissRequest = { showCancelDialog = false },
-                        title = { Text("Cancel Appointment") },
-                        text = {
-                                Text("Are you sure you want to cancel this appointment with ${appointment.doctorName}?")
-                        },
-                        confirmButton = {
-                                Button(
-                                        onClick = {
-                                                scope.launch {
-                                                        val result = FirestoreHelper.cancelAppointment(
-                                                                appointment.id,
-                                                                appointment.slotId
+                        Spacer(modifier = Modifier.height(Spacing.md))
+
+                        // Glassmorphism Health Tip Card - More Compact
+                        Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = Color.White.copy(alpha = 0.12f),
+                                modifier = Modifier.fillMaxWidth(),
+                                border =
+                                        BorderStroke(
+                                                1.dp,
+                                                Brush.verticalGradient(
+                                                        listOf(
+                                                                Color.White.copy(alpha = 0.3f),
+                                                                Color.Transparent
                                                         )
-                                                        result.fold(
-                                                                onSuccess = {
-                                                                        Toast.makeText(
-                                                                                context,
-                                                                                "Appointment cancelled",
-                                                                                Toast.LENGTH_SHORT
-                                                                        ).show()
-                                                                        showCancelDialog = false
-                                                                        onCancelled()
-                                                                },
-                                                                onFailure = { e ->
-                                                                        Toast.makeText(
-                                                                                context,
-                                                                                "Error: ${e.message}",
-                                                                                Toast.LENGTH_SHORT
-                                                                        ).show()
-                                                                }
+                                                )
+                                        )
+                        ) {
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                        // Accent blur/glow
+                                        Box(
+                                                modifier =
+                                                        Modifier.size(80.dp)
+                                                                .align(Alignment.TopEnd)
+                                                                .background(
+                                                                        Brush.radialGradient(
+                                                                                colors =
+                                                                                        listOf(
+                                                                                                Color.White
+                                                                                                        .copy(
+                                                                                                                alpha =
+                                                                                                                        0.1f
+                                                                                                        ),
+                                                                                                Color.Transparent
+                                                                                        )
+                                                                        )
+                                                                )
+                                        )
+
+                                        Row(
+                                                modifier = Modifier.padding(Spacing.md),
+                                                verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                                Box(
+                                                        modifier =
+                                                                Modifier.size(40.dp)
+                                                                        .background(
+                                                                                color =
+                                                                                        Color.White
+                                                                                                .copy(
+                                                                                                        alpha =
+                                                                                                                0.2f
+                                                                                                ),
+                                                                                shape =
+                                                                                        RoundedCornerShape(
+                                                                                                10.dp
+                                                                                        )
+                                                                        ),
+                                                        contentAlignment = Alignment.Center
+                                                ) {
+                                                        Icon(
+                                                                imageVector =
+                                                                        Icons.Default.Lightbulb,
+                                                                contentDescription = null,
+                                                                tint = Color.White,
+                                                                modifier = Modifier.size(22.dp)
                                                         )
                                                 }
-                                        },
-                                        colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFFE53935)
-                                        )
-                                ) {
-                                        Text("Yes, Cancel")
-                                }
-                        },
-                        dismissButton = {
-                                TextButton(onClick = { showCancelDialog = false }) {
-                                        Text("Keep")
+
+                                                Spacer(modifier = Modifier.width(Spacing.sm))
+
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                        Row(
+                                                                verticalAlignment =
+                                                                        Alignment.CenterVertically
+                                                        ) {
+                                                                Text(
+                                                                        text = "HEALTH TIP",
+                                                                        style =
+                                                                                MaterialTheme
+                                                                                        .typography
+                                                                                        .labelSmall,
+                                                                        color =
+                                                                                Color.White.copy(
+                                                                                        alpha = 0.7f
+                                                                                ),
+                                                                        fontWeight =
+                                                                                FontWeight.Bold,
+                                                                        letterSpacing = 1.sp
+                                                                )
+                                                                Spacer(
+                                                                        modifier =
+                                                                                Modifier.width(4.dp)
+                                                                )
+                                                                Surface(
+                                                                        shape = CircleShape,
+                                                                        color = Color(0xFFFFD700),
+                                                                        modifier =
+                                                                                Modifier.size(5.dp)
+                                                                ) {}
+                                                        }
+
+                                                        Spacer(modifier = Modifier.height(4.dp))
+
+                                                        Text(
+                                                                text = healthTip,
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .bodySmall,
+                                                                color = Color.White,
+                                                                fontWeight = FontWeight.Medium,
+                                                                lineHeight = 18.sp
+                                                        )
+                                                }
+                                        }
                                 }
                         }
-                )
-        }
-}
-
-@Composable
-fun StatusChip(status: String) {
-        val (bgColor, textColor) =
-                when (status.uppercase()) {
-                        "CONFIRMED" ->
-                                MaterialTheme.colorScheme.primaryContainer to
-                                        MaterialTheme.colorScheme.primary
-                        "COMPLETED" -> Color(0xFFE8F5E9) to Color(0xFF4CAF50)
-                        "PENDING" -> Color(0xFFFFF3E0) to Color(0xFFFF9800)
-                        "CANCELLED" -> Color(0xFFFFEBEE) to Color(0xFFE53935)
-                        else ->
-                                MaterialTheme.colorScheme.surfaceVariant to
-                                        MaterialTheme.colorScheme.onSurfaceVariant
                 }
+        }
+}
 
-        Surface(shape = RoundedCornerShape(8.dp), color = bgColor) {
-                Text(
-                        text = status,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = textColor,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+// ============================================
+// HEALTH STATS ROW - FIXED (NOT SCROLLABLE)
+// ============================================
+@Composable
+private fun HealthStatsRow(
+    appointmentCount: Int,
+    recordCount: Int,
+    reminderCount: Int,
+    onAppointmentsClick: () -> Unit,
+    onRecordsClick: () -> Unit,
+    onRemindersClick: () -> Unit
+) {
+        Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.lg),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+        ) {
+                HealthStatCard(
+                        icon = Icons.Default.CalendarMonth,
+                        count = appointmentCount,
+                        label = "Appointments",
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onAppointmentsClick
+                )
+                HealthStatCard(
+                        icon = Icons.Default.Description,
+                        count = recordCount,
+                        label = "Records",
+                        color = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onRecordsClick
+                )
+                HealthStatCard(
+                        icon = Icons.Default.Alarm,
+                        count = reminderCount,
+                        label = "Reminders",
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onRemindersClick
                 )
         }
 }
 
 @Composable
-fun MedicalRecordCard(record: MedicalRecord) {
-        Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+private fun HealthStatCard(
+    icon: ImageVector,
+    count: Int,
+    label: String,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+        var visible by remember { mutableStateOf(false) }
+        val scale by
+                animateFloatAsState(
+                        targetValue = if (visible) 1f else 0.8f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "scale"
+                )
+
+        LaunchedEffect(Unit) {
+                delay(100)
+                visible = true
+        }
+
+        Surface(
+                modifier = modifier.scale(scale).clickable(onClick = onClick),
+                shape = RoundedCornerShape(20.dp),
+                color = color.copy(alpha = 0.1f),
+                tonalElevation = 0.dp
         ) {
-                Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                Column(
+                        modifier = Modifier.padding(Spacing.md),
+                        horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                        Box(
-                                modifier =
-                                        Modifier.size(48.dp)
-                                                .background(
-                                                        Color(0xFFFFEBEE),
-                                                        RoundedCornerShape(12.dp)
-                                                ),
-                                contentAlignment = Alignment.Center
-                        ) {
-                                Icon(
-                                        imageVector = Icons.Default.PictureAsPdf,
-                                        contentDescription = null,
-                                        tint = Color(0xFFE53935)
-                                )
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                        text = record.fileName,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                        text = "PDF Document",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                        }
-                        Icon(
-                                imageVector = Icons.Default.OpenInNew,
-                                contentDescription = "View",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                Surface(
+                    shape = CircleShape,
+                    color = color.copy(alpha = 0.15f),
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.fillMaxSize().padding(10.dp)
+                    )
+                }
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                                text = count.toString(),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = color
+                        )
+                        Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1
                         )
                 }
         }
 }
 
+// ============================================
+// MODERN QUICK ACTIONS GRID WITH CUSTOM BACKGROUNDS
+// ============================================
 @Composable
-fun ArticleCard(article: WellnessResource) {
-        Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+private fun ModernQuickActionsGrid(
+        onMedicalRecords: () -> Unit,
+        onEmergencySOS: () -> Unit,
+        onReminders: () -> Unit,
+        onHealthTips: () -> Unit,
+        onHospitalLocator: () -> Unit
+) {
+        Column(
+                modifier = Modifier.padding(horizontal = Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
                 Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
+                        IllustratedActionCard(
+                                icon = null,
+                                title = "Medical\nRecords",
+                                gradient = listOf(Color(0xFF667eea), Color(0xFF764ba2)),
+                                backgroundImage = R.drawable.medical_records_bg,
+                                onClick = onMedicalRecords,
+                                modifier = Modifier.weight(1f)
+                        )
+                        IllustratedActionCard(
+                                icon = Icons.Default.Emergency,
+                                title = "Emergency\nSOS",
+                                gradient = listOf(Color(0xFFf093fb), Color(0xFFf5576c)),
+                                backgroundImage = R.drawable.sos_background,
+                                onClick = onEmergencySOS,
+                                modifier = Modifier.weight(1f)
+                        )
+                }
+                Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                ) {
+                        IllustratedActionCard(
+                                icon = null,
+                                title = "Medication\nReminders",
+                                gradient = listOf(Color(0xFF4facfe), Color(0xFF00f2fe)),
+                                backgroundImage = R.drawable.medication_bg,
+                                onClick = onReminders,
+                                modifier = Modifier.weight(1f)
+                        )
+                        IllustratedActionCard(
+                                icon = null,
+                                title = "Health\nTips",
+                                gradient = listOf(Color(0xFF43e97b), Color(0xFF38f9d7)),
+                                backgroundImage = R.drawable.health_tips_bg,
+                                onClick = onHealthTips,
+                                modifier = Modifier.weight(1f)
+                        )
+                }
+                // Hospital Locator - Full width card
+                HospitalLocatorCard(onClick = onHospitalLocator)
+        }
+}
+
+@Composable
+private fun HospitalLocatorCard(onClick: () -> Unit) {
+        var pressed by remember { mutableStateOf(false) }
+        val scale by
+                animateFloatAsState(
+                        targetValue = if (pressed) 0.98f else 1f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "scale"
+                )
+
+        Surface(
+                onClick = {
+                        pressed = true
+                        onClick()
+                },
+                modifier = Modifier.fillMaxWidth().height(80.dp).scale(scale),
+                shape = RoundedCornerShape(20.dp),
+                color = Color.Transparent
+        ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                        // Gradient background
                         Box(
                                 modifier =
-                                        Modifier.size(48.dp)
+                                        Modifier.fillMaxSize()
                                                 .background(
-                                                        MaterialTheme.colorScheme.tertiaryContainer,
-                                                        RoundedCornerShape(12.dp)
-                                                ),
-                                contentAlignment = Alignment.Center
+                                                        brush =
+                                                                Brush.horizontalGradient(
+                                                                        colors =
+                                                                                listOf(
+                                                                                        Color(
+                                                                                                0xFF1976D2
+                                                                                        ),
+                                                                                        Color(
+                                                                                                0xFF42A5F5
+                                                                                        )
+                                                                                )
+                                                                )
+                                                )
+                        )
+
+                        Row(
+                                modifier = Modifier.fillMaxSize().padding(horizontal = Spacing.lg),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Surface(
+                                                shape = CircleShape,
+                                                color = Color.White.copy(alpha = 0.2f),
+                                                modifier = Modifier.size(48.dp)
+                                        ) {
+                                                Icon(
+                                                        Icons.Default.LocalHospital,
+                                                        contentDescription = null,
+                                                        tint = Color.White,
+                                                        modifier = Modifier.padding(12.dp)
+                                                )
+                                        }
+                                        Spacer(modifier = Modifier.width(Spacing.md))
+                                        Column {
+                                                Text(
+                                                        "Find Nearby Hospitals",
+                                                        style =
+                                                                MaterialTheme.typography
+                                                                        .titleMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color.White
+                                                )
+                                                Text(
+                                                        "Locate hospitals, clinics & emergency rooms",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = Color.White.copy(alpha = 0.8f)
+                                                )
+                                        }
+                                }
                                 Icon(
-                                        imageVector = Icons.Default.Article,
+                                        Icons.AutoMirrored.Filled.ArrowForward,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.tertiary
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
                                 )
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                        text = article.title,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                }
+        }
+
+        LaunchedEffect(pressed) {
+                if (pressed) {
+                        delay(150)
+                        pressed = false
+                }
+        }
+}
+
+@Composable
+private fun IllustratedActionCard(
+        icon: ImageVector?,
+        title: String,
+        gradient: List<Color>,
+        backgroundImage: Int?,
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier
+) {
+        var pressed by remember { mutableStateOf(false) }
+        val scale by
+                animateFloatAsState(
+                        targetValue = if (pressed) 0.95f else 1f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "scale"
+                )
+
+        Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+                // Card with background image
+                Surface(
+                        onClick = {
+                                pressed = true
+                                onClick()
+                        },
+                        modifier = Modifier.fillMaxWidth().height(85.dp).scale(scale),
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color.Transparent
+                ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                                // Background image if provided
+                                if (backgroundImage != null) {
+                                        Image(
+                                                painter = painterResource(id = backgroundImage),
+                                                contentDescription = null,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize()
+                                        )
+                                        // Very light gradient overlay (10-20% to make image very
+                                        // visible)
+                                        Box(
+                                                modifier =
+                                                        Modifier.fillMaxSize()
+                                                                .background(
+                                                                        brush =
+                                                                                Brush.verticalGradient(
+                                                                                        colors =
+                                                                                                listOf(
+                                                                                                        gradient[
+                                                                                                                        0]
+                                                                                                                .copy(
+                                                                                                                        alpha =
+                                                                                                                                0.1f
+                                                                                                                ),
+                                                                                                        gradient[
+                                                                                                                        1]
+                                                                                                                .copy(
+                                                                                                                        alpha =
+                                                                                                                                0.2f
+                                                                                                                )
+                                                                                                )
+                                                                                )
+                                                                )
+                                        )
+                                } else {
+                                        // Fallback to gradient background
+                                        Box(
+                                                modifier =
+                                                        Modifier.fillMaxSize()
+                                                                .background(
+                                                                        brush =
+                                                                                Brush.linearGradient(
+                                                                                        colors =
+                                                                                                gradient
+                                                                                )
+                                                                )
+                                        )
+                                }
+
+                                // Icon overlay for visual representation
+                                if (icon != null) {
+                                        Surface(
+                                                shape = CircleShape,
+                                                color = Color.White.copy(alpha = 0.2f),
+                                                modifier =
+                                                        Modifier.padding(Spacing.sm)
+                                                                .size(36.dp)
+                                                                .align(Alignment.TopStart)
+                                        ) {
+                                                Icon(
+                                                        imageVector = icon,
+                                                        contentDescription = null,
+                                                        tint = Color.White,
+                                                        modifier = Modifier.padding(8.dp)
+                                                )
+                                        }
+                                }
+                        }
+                }
+
+                // Title below the card
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                Text(
+                        text = title.replace("\n", " "),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
+                )
+        }
+
+        LaunchedEffect(pressed) {
+                if (pressed) {
+                        delay(150)
+                        pressed = false
+                }
+        }
+}
+
+// ============================================
+// PREMIUM APPOINTMENT CARD
+// ============================================
+@Composable
+private fun PremiumAppointmentCard(appointment: Appointment, onCancel: () -> Unit) {
+        Surface(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.lg),
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp,
+                tonalElevation = 1.dp
+        ) {
+                Column(modifier = Modifier.padding(Spacing.lg)) {
+                        Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top
+                        ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Surface(
+                                                shape = CircleShape,
+                                                color = MaterialTheme.colorScheme.primaryContainer,
+                                                modifier = Modifier.size(48.dp)
+                                        ) {
+                                                Icon(
+                                                        imageVector = Icons.Default.Person,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier =
+                                                                Modifier.fillMaxSize()
+                                                                        .padding(12.dp)
+                                                )
+                                        }
+                                        Spacer(modifier = Modifier.width(Spacing.md))
+                                        Column {
+                                                Text(
+                                                        text = appointment.doctorName,
+                                                        style =
+                                                                MaterialTheme.typography
+                                                                        .titleMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Text(
+                                                        text = "Specialist",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color =
+                                                                MaterialTheme.colorScheme
+                                                                        .onSurfaceVariant
+                                                )
+                                        }
+                                }
+                                StatusBadge(status = appointment.status, size = BadgeSize.SMALL)
+                        }
+
+                        Spacer(modifier = Modifier.height(Spacing.lg))
+
+                        HorizontalDivider(
+                                thickness = 0.5.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
+
+                        Spacer(modifier = Modifier.height(Spacing.md))
+
+                        Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.lg)
+                        ) {
+                                Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                ) {
+                                        Icon(
+                                                imageVector = Icons.Default.CalendarToday,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(Spacing.xs))
+                                        Text(
+                                                text = formatDate(appointment.date),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontWeight = FontWeight.Medium
+                                        )
+                                }
+                                Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                ) {
+                                        Icon(
+                                                imageVector = Icons.Default.AccessTime,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(Spacing.xs))
+                                        Text(
+                                                text = appointment.time,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontWeight = FontWeight.Medium
+                                        )
+                                }
+                        }
+
+                        if (appointment.status != "Cancelled" && appointment.status != "Completed"
+                        ) {
+                                Spacer(modifier = Modifier.height(Spacing.lg))
+                                TextButton(
+                                        onClick = onCancel,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors =
+                                                ButtonDefaults.textButtonColors(
+                                                        contentColor =
+                                                                MaterialTheme.colorScheme.error
+                                                )
+                                ) {
+                                        Text(
+                                                "Cancel Appointment",
+                                                style = MaterialTheme.typography.bodySmall
+                                        )
+                                }
+                        }
+                }
+        }
+}
+
+// ============================================
+// PREMIUM EMPTY STATE
+// ============================================
+@Composable
+private fun PremiumEmptyState(
+        icon: ImageVector,
+        title: String,
+        message: String,
+        actionLabel: String,
+        onAction: () -> Unit
+) {
+        Surface(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.lg),
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        ) {
+                Column(
+                        modifier = Modifier.padding(Spacing.xxl),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                        Surface(
+                                shape = CircleShape,
+                                color =
+                                        MaterialTheme.colorScheme.primaryContainer.copy(
+                                                alpha = 0.5f
+                                        ),
+                                modifier = Modifier.size(64.dp)
+                        ) {
+                                Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.fillMaxSize().padding(16.dp)
                                 )
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                        Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                                text = message,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 20.sp
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.lg))
+                        Button(
+                                onClick = onAction,
+                                shape = RoundedCornerShape(12.dp),
+                                colors =
+                                        ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.primary
+                                        )
+                        ) {
                                 Text(
-                                        text =
-                                                article.content.take(50) +
-                                                        if (article.content.length > 50) "..."
-                                                        else "",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1
+                                        text = actionLabel,
+                                        modifier =
+                                                Modifier.padding(
+                                                        horizontal = Spacing.md,
+                                                        vertical = Spacing.xs
+                                                )
                                 )
                         }
                 }
         }
 }
 
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+private fun getGreeting(): String {
+        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        return when (hour) {
+                in 0..11 -> "Good Morning"
+                in 12..16 -> "Good Afternoon"
+                else -> "Good Evening"
+        }
+}
+
+private fun formatDate(dateString: String): String {
+        return try {
+                val inputFormat =
+                        java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val outputFormat =
+                        java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
+                val date = inputFormat.parse(dateString)
+                date?.let { outputFormat.format(it) } ?: dateString
+        } catch (e: Exception) {
+                dateString
+        }
+}
+
 // ==================== USER REMINDERS SCREEN ====================
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserRemindersScreen() {
         val context = LocalContext.current
@@ -654,29 +1319,69 @@ fun UserRemindersScreen() {
 
         var reminders by remember { mutableStateOf<List<Reminder>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
+        var showAddDialog by remember { mutableStateOf(false) }
 
-        LaunchedEffect(Unit) {
+        fun loadReminders() {
                 scope.launch {
+                        isLoading = true
                         val userId = FirebaseAuthHelper.getCurrentUserId()
                         reminders = FirestoreHelper.getUserReminders(userId)
                         isLoading = false
                 }
         }
 
+        LaunchedEffect(Unit) { loadReminders() }
+
+        if (showAddDialog) {
+                AddReminderDialog(
+                        onDismiss = { showAddDialog = false },
+                        onAdd = { medicineName, time ->
+                                scope.launch {
+                                        val reminder = Reminder(
+                                                userId = FirebaseAuthHelper.getCurrentUserId(),
+                                                medicineName = medicineName,
+                                                time = time
+                                        )
+                                        val result = FirestoreHelper.addReminder(reminder)
+                                        result.fold(
+                                                onSuccess = { reminderId ->
+                                                        ReminderUtils.scheduleReminder(context, reminderId, medicineName, time)
+                                                        Toast.makeText(context, "Reminder added!", Toast.LENGTH_SHORT).show()
+                                                        loadReminders()
+                                                },
+                                                onFailure = { error ->
+                                                        Toast.makeText(context, "Failed: ${error.message}", Toast.LENGTH_SHORT).show()
+                                                }
+                                        )
+                                }
+                                showAddDialog = false
+                        }
+                )
+        }
+
         Scaffold(
+                topBar = {
+                        TopAppBar(
+                                title = {
+                                        Text("Medication Reminders", fontWeight = FontWeight.Bold)
+                                },
+                                colors =
+                                        TopAppBarDefaults.topAppBarColors(
+                                                containerColor =
+                                                        MaterialTheme.colorScheme.background,
+                                                titleContentColor =
+                                                        MaterialTheme.colorScheme.onBackground
+                                        )
+                        )
+                },
                 floatingActionButton = {
                         FloatingActionButton(
-                                onClick = {
-                                        context.startActivity(
-                                                Intent(
-                                                        context,
-                                                        MedicationRemindersActivity::class.java
-                                                )
-                                        )
-                                },
-                                containerColor = MaterialTheme.colorScheme.primary
+                                onClick = { showAddDialog = true },
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                shape = CircleShape
                         ) { Icon(Icons.Default.Add, "Add Reminder", tint = Color.White) }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.background
         ) { padding ->
                 Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                         when {
@@ -688,50 +1393,74 @@ fun UserRemindersScreen() {
                                 }
                                 reminders.isEmpty() -> {
                                         Column(
-                                                modifier = Modifier.fillMaxSize(),
+                                                modifier =
+                                                        Modifier.fillMaxSize().padding(Spacing.xxl),
                                                 horizontalAlignment = Alignment.CenterHorizontally,
                                                 verticalArrangement = Arrangement.Center
                                         ) {
-                                                Icon(
-                                                        imageVector = Icons.Default.Alarm,
-                                                        contentDescription = null,
-                                                        modifier = Modifier.size(80.dp),
-                                                        tint =
+                                                Surface(
+                                                        shape = CircleShape,
+                                                        color =
                                                                 MaterialTheme.colorScheme
-                                                                        .onSurfaceVariant.copy(
-                                                                        alpha = 0.5f
-                                                                )
-                                                )
-                                                Spacer(modifier = Modifier.height(16.dp))
+                                                                        .primaryContainer.copy(
+                                                                        alpha = 0.3f
+                                                                ),
+                                                        modifier = Modifier.size(120.dp)
+                                                ) {
+                                                        Icon(
+                                                                imageVector = Icons.Default.Alarm,
+                                                                contentDescription = null,
+                                                                modifier = Modifier.padding(32.dp),
+                                                                tint =
+                                                                        MaterialTheme.colorScheme
+                                                                                .primary
+                                                        )
+                                                }
+                                                Spacer(modifier = Modifier.height(Spacing.xl))
                                                 Text(
-                                                        text = "No reminders set",
+                                                        text = "No reminders yet",
                                                         style =
                                                                 MaterialTheme.typography
-                                                                        .titleMedium,
-                                                        color =
-                                                                MaterialTheme.colorScheme
-                                                                        .onSurfaceVariant
+                                                                        .headlineSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onSurface
                                                 )
-                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Spacer(modifier = Modifier.height(Spacing.sm))
                                                 Text(
-                                                        text = "Tap + to add a medication reminder",
-                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        text =
+                                                                "Stay on track with your meds. Tap the button below to add your first reminder.",
+                                                        style = MaterialTheme.typography.bodyLarge,
                                                         color =
                                                                 MaterialTheme.colorScheme
-                                                                        .onSurfaceVariant.copy(
-                                                                        alpha = 0.7f
-                                                                )
+                                                                        .onSurfaceVariant,
+                                                        textAlign =
+                                                                androidx.compose.ui.text.style
+                                                                        .TextAlign.Center
                                                 )
                                         }
                                 }
                                 else -> {
                                         LazyColumn(
                                                 modifier = Modifier.fillMaxSize(),
-                                                contentPadding = PaddingValues(16.dp),
-                                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                                contentPadding =
+                                                        PaddingValues(
+                                                                horizontal = Spacing.lg,
+                                                                vertical = Spacing.md
+                                                        ),
+                                                verticalArrangement =
+                                                        Arrangement.spacedBy(Spacing.md)
                                         ) {
                                                 items(reminders) { reminder ->
-                                                        ReminderCard(reminder = reminder)
+                                                        ReminderCard(
+                                                                reminder = reminder,
+                                                                onDelete = {
+                                                                        scope.launch {
+                                                                                FirestoreHelper.deleteReminder(reminder.id)
+                                                                                ReminderUtils.cancelReminder(context, reminder.id)
+                                                                                loadReminders()
+                                                                        }
+                                                                }
+                                                        )
                                                 }
                                         }
                                 }
@@ -740,59 +1469,6 @@ fun UserRemindersScreen() {
         }
 }
 
-@Composable
-fun ReminderCard(reminder: Reminder) {
-        Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-                Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                ) {
-                        Box(
-                                modifier =
-                                        Modifier.size(48.dp)
-                                                .background(
-                                                        MaterialTheme.colorScheme.primaryContainer,
-                                                        RoundedCornerShape(12.dp)
-                                                ),
-                                contentAlignment = Alignment.Center
-                        ) {
-                                Icon(
-                                        imageVector = Icons.Default.Medication,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                )
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                        text = reminder.medicineName,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                        text = "Daily at ${reminder.time}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                        }
-                        Switch(
-                                checked = reminder.isActive,
-                                onCheckedChange = { /* Toggle reminder */},
-                                colors =
-                                        SwitchDefaults.colors(
-                                                checkedThumbColor =
-                                                        MaterialTheme.colorScheme.primary,
-                                                checkedTrackColor =
-                                                        MaterialTheme.colorScheme.primaryContainer
-                                        )
-                        )
-                }
-        }
-}
 
 // ==================== USER SETTINGS SCREEN ====================
 @Composable
@@ -801,8 +1477,8 @@ fun UserSettingsScreen(onLogout: () -> Unit) {
 
         LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                contentPadding = PaddingValues(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
                 item {
                         Text(
@@ -851,7 +1527,7 @@ fun UserSettingsScreen(onLogout: () -> Unit) {
 
                 item {
                         SettingsItem(
-                                icon = Icons.Default.FolderOpen,
+                                icon = null,
                                 title = "Medical Records",
                                 subtitle = "View and upload medical documents",
                                 onClick = {
@@ -876,6 +1552,65 @@ fun UserSettingsScreen(onLogout: () -> Unit) {
                 }
 
                 item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                                text = "Preferences",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                }
+
+                item {
+                        val scope = rememberCoroutineScope()
+                        var isDarkMode by remember { mutableStateOf(false) }
+
+                        // Load current theme preference
+                        LaunchedEffect(Unit) {
+                                val themeManager = com.example.healthmate.util.ThemeManager(context)
+                                isDarkMode = themeManager.isDarkMode.first()
+                        }
+
+                        SettingsItemWithToggle(
+                                icon = Icons.Default.DarkMode,
+                                title = "Night Mode",
+                                subtitle =
+                                        if (isDarkMode) "Dark theme enabled"
+                                        else "Light theme enabled",
+                                checked = isDarkMode,
+                                onCheckedChange = { enabled ->
+                                        isDarkMode = enabled
+                                        scope.launch {
+                                                val themeManager =
+                                                        com.example.healthmate.util.ThemeManager(
+                                                                context
+                                                        )
+                                                themeManager.setDarkMode(enabled)
+                                                // Restart activity to apply theme
+                                                (context as? Activity)?.recreate()
+                                        }
+                                }
+                        )
+                }
+
+                item {
+                        SettingsItem(
+                                icon = null,
+                                title = "Notifications",
+                                subtitle = "Manage notification preferences",
+                                onClick = {
+                                        // TODO: Navigate to NotificationsActivity when created
+                                        Toast.makeText(
+                                                        context,
+                                                        "Notification settings coming soon",
+                                                        Toast.LENGTH_SHORT
+                                                )
+                                                .show()
+                                }
+                        )
+                }
+
+                item {
                         Spacer(modifier = Modifier.height(24.dp))
                         Button(
                                 onClick = onLogout,
@@ -886,7 +1621,7 @@ fun UserSettingsScreen(onLogout: () -> Unit) {
                                         ),
                                 shape = RoundedCornerShape(12.dp)
                         ) {
-                                Icon(Icons.Default.Logout, "Logout")
+                                Icon(Icons.AutoMirrored.Filled.Logout, "Logout")
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Logout", modifier = Modifier.padding(vertical = 8.dp))
                         }
@@ -895,38 +1630,33 @@ fun UserSettingsScreen(onLogout: () -> Unit) {
 }
 
 @Composable
-fun SettingsItem(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
+fun SettingsItem(icon: ImageVector?, title: String, subtitle: String, onClick: () -> Unit) {
         Card(
                 modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                shape = HealthMateShapes.InputField,
+                colors =
+                        CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
         ) {
                 Row(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                 ) {
-                        Box(
-                                modifier =
-                                        Modifier.size(44.dp)
-                                                .background(
-                                                        MaterialTheme.colorScheme.primaryContainer,
-                                                        RoundedCornerShape(12.dp)
-                                                ),
-                                contentAlignment = Alignment.Center
-                        ) {
+                        if (icon != null) {
                                 Icon(
                                         imageVector = icon,
-                                        contentDescription = null,
+                                        contentDescription = title,
                                         tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(22.dp)
+                                        modifier = Modifier.size(24.dp)
                                 )
+                                Spacer(modifier = Modifier.width(16.dp))
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                         text = title,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Medium
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                         text = subtitle,
@@ -936,9 +1666,55 @@ fun SettingsItem(icon: ImageVector, title: String, subtitle: String, onClick: ()
                         }
                         Icon(
                                 imageVector = Icons.Default.ChevronRight,
-                                contentDescription = null,
+                                contentDescription = "Navigate",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                }
+        }
+}
+
+@Composable
+fun SettingsItemWithToggle(
+        icon: ImageVector?,
+        title: String,
+        subtitle: String,
+        checked: Boolean,
+        onCheckedChange: (Boolean) -> Unit
+) {
+        Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = HealthMateShapes.InputField,
+                colors =
+                        CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+        ) {
+                Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                ) {
+                        if (icon != null) {
+                                Icon(
+                                        imageVector = icon,
+                                        contentDescription = title,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                        text = subtitle,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                        }
+                        Switch(checked = checked, onCheckedChange = onCheckedChange)
                 }
         }
 }
