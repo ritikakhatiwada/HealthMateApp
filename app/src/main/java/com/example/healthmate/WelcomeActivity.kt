@@ -20,129 +20,149 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.healthmate.ui.theme.HealthMateTheme
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
+import com.example.healthmate.util.ThemeManager
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 class WelcomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { WelcomeBody() }
+        setContent {
+            val themeManager = ThemeManager(this)
+            val isDarkMode by themeManager.isDarkMode.collectAsState(initial = false)
+            HealthMateTheme(darkTheme = isDarkMode) {
+                WelcomeBody(isDarkMode)
+            }
+        }
     }
 }
 
 @Composable
-fun WelcomeBody() {
+fun WelcomeBody(isDarkMode: Boolean = false) {
 
     // ✅ Context for navigation
     val context = LocalContext.current
 
     Box(
-            modifier =
-                    Modifier.fillMaxSize()
-                            .background(
-                                    brush =
-                                            Brush.verticalGradient(
-                                                    colors =
-                                                            listOf(
-                                                                    Color(0xFF0891B2),
-                                                                    Color(0xFF06B6D4)
-                                                            )
-                                            )
-                            )
+        modifier = Modifier.fillMaxSize()
     ) {
-        // Background image
+        // Full screen background image
         Image(
-                painter = painterResource(id = R.drawable.doctors),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                alpha = 0.3f
+            painter = painterResource(id = R.drawable.welcomescreen1),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
 
-        // Main content card
-        Card(
-                modifier = Modifier.align(Alignment.Center).padding(32.dp).fillMaxWidth(0.9f),
-                shape = RoundedCornerShape(24.dp),
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor = Color(0xFFB3E5F5).copy(alpha = 0.9f)
-                        ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        // Column for content on top of image
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                    modifier = Modifier.padding(32.dp).fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+            // Push content to start from center
+            Spacer(modifier = Modifier.weight(1f))
+
+            // ✅ Login Button
+            Button(
+                onClick = {
+                    val intent = Intent(context, LoginActivity::class.java)
+                    context.startActivity(intent)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
-                Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Health Mate Logo",
-                        modifier = Modifier.size(100.dp)
-                )
-
                 Text(
-                        text = "Welcome to Health Mate!",
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                )
-
-                Text(
-                        text = "Your Health Companion",
-                        fontSize = 16.sp,
-                        color = Color(0xFF0E7490),
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Medium
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // ✅ Login Button
-                Button(
-                        onClick = {
-                            val intent = Intent(context, LoginActivity::class.java)
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
-                ) {
-                    Text(
-                            text = "Login",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                    )
-                }
-
-                // ✅ Sign Up Button
-                Button(
-                        onClick = {
-                            val intent = Intent(context, SignUpActivity::class.java)
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E))
-                ) {
-                    Text(
-                            text = "Sign Up",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                    )
-                }
-
-                Text(
-                        text = "Manage your health with ease",
-                        fontSize = 14.sp,
-                        color = Color(0xFF0E7490).copy(alpha = 0.8f),
-                        textAlign = TextAlign.Center
+                    text = "Login",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            // ✅ Sign Up Button
+            Button(
+                onClick = {
+                    val intent = Intent(context, SignUpActivity::class.java)
+                    context.startActivity(intent)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White.copy(alpha = 0.9f),
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            ) {
+                Text(
+                    text = "Create Account",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.xl))
+
+            // Branding Section
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Surface(
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    color = Color.White.copy(alpha = 0.9f),
+                    modifier = Modifier.size(40.dp),
+                    shadowElevation = 4.dp
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_final),
+                        contentDescription = "HealthMate Logo",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(6.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(Spacing.sm))
+
+                Text(
+                    text = "Health Mate",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.xs))
+
+            // Security Text
+            Text(
+                text = "Secure • Reliable • Clinical",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                textAlign = TextAlign.Center,
+                letterSpacing = 1.2.sp
+            )
+
+            // Bottom spacer
+            Spacer(modifier = Modifier.weight(0.5f))
         }
     }
 }
