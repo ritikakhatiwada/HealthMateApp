@@ -9,28 +9,33 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.healthmate.BuildConfig
 import com.example.healthmate.auth.FirebaseAuthHelper
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.MedicalRecord
+import com.example.healthmate.ui.components.EmptyState
+import com.example.healthmate.ui.components.HealthMateFAB
+import com.example.healthmate.ui.components.HealthMateTextField
+import com.example.healthmate.ui.components.HealthMateTopBar
+import com.example.healthmate.ui.components.LoadingState
+import com.example.healthmate.ui.components.MedicalRecordsSkeleton
+import com.example.healthmate.ui.components.MedicalRecordListItem
 import com.example.healthmate.ui.theme.HealthMateTheme
-import com.example.healthmate.ui.theme.Purple40
+import com.example.healthmate.ui.theme.Spacing
 import com.example.healthmate.util.ThemeManager
 import java.io.File
 import java.io.FileOutputStream
@@ -60,7 +65,9 @@ class MedicalRecordsActivity : ComponentActivity() {
 @Composable
 fun MedicalRecordsScreen() {
     val context = LocalContext.current
-    var records by remember { mutableStateOf<List<MedicalRecord>>(emptyList()) }
+    var allRecords by remember { mutableStateOf<List<MedicalRecord>>(emptyList()) }
+    var filteredRecords by remember { mutableStateOf<List<MedicalRecord>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
     var isUploading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -68,12 +75,24 @@ fun MedicalRecordsScreen() {
     fun loadRecords() {
         coroutineScope.launch {
             isLoading = true
-            records = FirestoreHelper.getUserMedicalRecords(FirebaseAuthHelper.getCurrentUserId())
+            allRecords = FirestoreHelper.getUserMedicalRecords(FirebaseAuthHelper.getCurrentUserId())
+            filteredRecords = allRecords
             isLoading = false
         }
     }
 
     LaunchedEffect(Unit) { loadRecords() }
+
+    // Filter records based on search query
+    LaunchedEffect(searchQuery, allRecords) {
+        filteredRecords = if (searchQuery.isEmpty()) {
+            allRecords
+        } else {
+            allRecords.filter { record ->
+                record.fileName.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
 
     // File picker for PDF
     val pdfPicker =
@@ -143,71 +162,83 @@ fun MedicalRecordsScreen() {
             }
 
     Scaffold(
-            topBar = {
-                TopAppBar(
-                        title = { Text("Medical Records", color = Color.White) },
-                        navigationIcon = {
-                            IconButton(onClick = { (context as? ComponentActivity)?.finish() }) {
-                                Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40)
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                        onClick = { pdfPicker.launch("application/pdf") },
-                        containerColor = Purple40
-                ) {
-                    if (isUploading) {
-                        CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                        )
-                    } else {
-                        Icon(Icons.Default.Add, "Upload PDF", tint = Color.White)
-                    }
-                }
-            }
+        topBar = {
+            HealthMateTopBar(
+                title = "Medical Records",
+                subtitle = "Your health documents",
+                navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                onNavigationClick = { (context as? ComponentActivity)?.finish() }
+            )
+        },
+        floatingActionButton = {
+            HealthMateFAB(
+                icon = Icons.Default.Add,
+                contentDescription = "Upload Medical Record",
+                onClick = { pdfPicker.launch("application/pdf") }
+            )
+        }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when {
-                isLoading -> {
-                    CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = Purple40
+        if (isLoading) {
+            MedicalRecordsSkeleton()
+        } else if (allRecords.isEmpty()) {
+            EmptyState(
+                icon = Icons.Default.Description,
+                title = "No Medical Records",
+                message = "Upload your medical documents for easy access anytime. Supported format: PDF",
+                actionLabel = "Upload Record",
+                onAction = { pdfPicker.launch("application/pdf") }
+            )
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                // Search Bar
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.lg, vertical = Spacing.md)
+                ) {
+                    HealthMateTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = "Search",
+                        placeholder = "Search by file name",
+                        leadingIcon = Icons.Default.Search,
+                        imeAction = ImeAction.Search
                     )
                 }
-                records.isEmpty() -> {
-                    Column(
-                            modifier = Modifier.fillMaxSize().padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+
+                // Records Grid
+                if (filteredRecords.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                                imageVector = Icons.Default.Description,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = Color.Gray
+                        EmptyState(
+                            icon = Icons.Default.Search,
+                            title = "No Results Found",
+                            message = "No records match your search query."
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "No medical records", fontSize = 18.sp, color = Color.Gray)
-                        Text(text = "Tap + to upload a PDF", fontSize = 14.sp, color = Color.Gray)
                     }
-                }
-                else -> {
-                    LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(Spacing.lg),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
-                        items(records) { record ->
-                            RecordCard(record = record) {
-                                // Open PDF in browser/viewer
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(record.fileUrl))
-                                context.startActivity(intent)
-                            }
+                        items(filteredRecords) { record ->
+                            MedicalRecordListItem(
+                                record = record,
+                                onClick = {
+                                    // Open PDF in browser/viewer
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(record.fileUrl))
+                                    context.startActivity(intent)
+                                }
+                            )
                         }
                     }
                 }
@@ -216,47 +247,7 @@ fun MedicalRecordsScreen() {
     }
 }
 
-@Composable
-fun RecordCard(record: MedicalRecord, onClick: () -> Unit) {
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
-
-    Card(
-            modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                    imageVector = Icons.Default.PictureAsPdf,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = Color.Red
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                        text = record.fileName,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1
-                )
-                Text(
-                        text = dateFormat.format(Date(record.uploadedAt)),
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                )
-            }
-            Icon(
-                    imageVector = Icons.Default.OpenInNew,
-                    contentDescription = "Open",
-                    tint = Purple40
-            )
-        }
-    }
-}
+// RecordCard removed - now using MedicalRecordListItem from ui.components package
 
 // Cloudinary upload function
 suspend fun uploadToCloudinary(file: File): String? {

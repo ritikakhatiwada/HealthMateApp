@@ -3,15 +3,25 @@ package com.example.healthmate.repository
 import android.util.Log
 import com.example.healthmate.BuildConfig
 import com.example.healthmate.model.ChatMessage
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
-import com.google.ai.client.generativeai.type.generationConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.concurrent.TimeUnit
 
 class ChatbotRepository {
 
     private val tag = "ChatbotRepository"
+
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .build()
 
     private val systemPrompt =
             """
@@ -26,24 +36,8 @@ class ChatbotRepository {
         5. Be empathetic, clear, and concise.
     """.trimIndent()
 
-    private fun createModel(): GenerativeModel {
-        return GenerativeModel(
-                // Reverting to the standard flash model. The 404 errors indicate an API Key
-                // permission issue,
-                // not a model availability issue (since both Pro and Flash failed).
-                modelName = "gemini-1.5-flash",
-                // IMPORTANT: Trimming the API key to remove any potential accidental
-                // whitespace/newline
-                apiKey = BuildConfig.GEMINI_API_KEY.trim(),
-                generationConfig =
-                        generationConfig {
-                            temperature = 0.4f
-                            topK = 20
-                            topP = 0.8f
-                            maxOutputTokens = 800
-                        }
-        )
-    }
+    private val modelName = "gemini-3-flash-preview"
+    private val baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent"
 
     /** Sends a message to Gemini API */
     suspend fun sendMessage(
@@ -52,83 +46,91 @@ class ChatbotRepository {
     ): Result<String> =
             withContext(Dispatchers.IO) {
                 try {
-                    Log.d(tag, "Sending message to Gemini: $userMessage")
+                    Log.d(tag, "Sending message to Gemini via REST: $userMessage")
 
-                    val model = createModel()
+                    val apiKey = BuildConfig.GEMINI_API_KEY.trim()
+                    val url = "$baseUrl?key=$apiKey"
 
-                    // Construct history
-                    val history =
-                            mutableListOf(
-                                    content(role = "user") { text(systemPrompt) },
-                                    content(role = "model") {
-                                        text(
-                                                "Understood. I am ready to help with health-related queries."
-                                        )
-                                    }
-                            )
+                    // Construct JSON payload
+                    val contents = JSONArray()
 
-                    // Add conversation history
-                    // Take recent history to maintain context
+                    // Add System Prompt & Initial Setup
+                    contents.put(JSONObject().apply {
+                        put("role", "user")
+                        put("parts", JSONArray().put(JSONObject().put("text", systemPrompt)))
+                    })
+                    contents.put(JSONObject().apply {
+                        put("role", "model")
+                        put("parts", JSONArray().put(JSONObject().put("text", "Understood. I am ready to help with health-related queries.")))
+                    })
+
+                    // Add History
                     conversationHistory.takeLast(20).forEach { msg ->
-                        val role = if (msg.isUser) "user" else "model"
-                        history.add(content(role = role) { text(msg.text) })
+                        contents.put(JSONObject().apply {
+                            put("role", if (msg.isUser) "user" else "model")
+                            put("parts", JSONArray().put(JSONObject().put("text", msg.text)))
+                        })
                     }
 
-                    val chat = model.startChat(history = history)
+                    // Add Current Message
+                    contents.put(JSONObject().apply {
+                        put("role", "user")
+                        put("parts", JSONArray().put(JSONObject().put("text", userMessage)))
+                    })
 
-                    val response = chat.sendMessage(userMessage)
-                    val aiResponse =
-                            response.text
-                                    ?: return@withContext Result.failure(
-                                            Exception("Empty response from Gemini")
-                                    )
+                    val jsonPayload = JSONObject().apply {
+                        put("contents", contents)
+                        put("generationConfig", JSONObject().apply {
+                            put("temperature", 0.4)
+                            put("topK", 20)
+                            put("topP", 0.8)
+                            put("maxOutputTokens", 800)
+                        })
+                    }
 
-                    Log.d(tag, "Gemini response received successfully")
-                    Result.success(aiResponse.trim())
+                    val requestBody = jsonPayload.toString().toRequestBody("application/json".toMediaType())
+                    val request = Request.Builder()
+                        .url(url)
+                        .post(requestBody)
+                        .build()
+
+                    client.newCall(request).execute().use { response ->
+                        if (!response.isSuccessful) {
+                            val errorBody = response.body?.string() ?: "Unknown error"
+                            Log.e(tag, "API Error: $errorBody")
+                            return@withContext Result.failure(Exception(parseError(errorBody)))
+                        }
+
+                        val responseBody = response.body?.string() ?: throw Exception("Empty response body")
+                        val jsonResponse = JSONObject(responseBody)
+                        val candidates = jsonResponse.optJSONArray("candidates") ?: throw Exception("No candidates found")
+                        
+                        if (candidates.length() == 0) throw Exception("Empty candidates list")
+                        
+                        val firstCandidate = candidates.getJSONObject(0)
+                        val content = firstCandidate.optJSONObject("content") ?: throw Exception("No content in candidate")
+                        val parts = content.optJSONArray("parts") ?: throw Exception("No parts in candidate content")
+                        
+                        if (parts.length() == 0) throw Exception("Empty parts list")
+                        
+                        val text = parts.getJSONObject(0).optString("text")
+                        
+                        Log.d(tag, "Gemini response received successfully")
+                        Result.success(text.trim())
+                    }
                 } catch (e: Exception) {
                     Log.e(tag, "Error sending message to Gemini", e)
-
-                    // Handle the specific Serialization bug in the SDK where it fails to parse the
-                    // error response
-                    if (e.javaClass.name.contains("Serialization", ignoreCase = true) ||
-                                    e.message?.contains("MissingFieldException") == true
-                    ) {
-                        return@withContext Result.failure(
-                                Exception(
-                                        "Service configuration error. Please ensure the Google Generative AI API is enabled for your project API Key."
-                                )
-                        )
-                    }
-
-                    // Extensive error handling as requested
-                    val errorMessage =
-                            when {
-                                e.message?.contains("API_KEY_INVALID", ignoreCase = true) == true ->
-                                        "Invalid API key. Please check your Gemini API key."
-                                e.message?.contains("quota", ignoreCase = true) == true ->
-                                        "API quota exceeded. Please try again in a few minutes."
-                                e.message?.contains("PERMISSION_DENIED", ignoreCase = true) ==
-                                        true ->
-                                        "Permission denied. Please check your API key permissions."
-                                e.message?.contains("404") == true ||
-                                        e.message?.contains("NOT_FOUND") == true ->
-                                        "Model not available. Please ensure your API Key has access to 'gemini-1.5-flash'."
-                                e.message?.contains("429") == true ||
-                                        e.message?.contains("RESOURCE_EXHAUSTED") == true ->
-                                        "Too many requests. Please wait and try again."
-                                e.message?.contains("network", ignoreCase = true) == true ||
-                                        e.message?.contains(
-                                                "Unable to resolve host",
-                                                ignoreCase = true
-                                        ) == true ->
-                                        "Network error. Please check your internet connection."
-                                e.message?.contains("DEADLINE_EXCEEDED", ignoreCase = true) ==
-                                        true -> "Request timeout. Please try again."
-                                else ->
-                                        "Sorry, something went wrong. Please try again. (${e.message})"
-                            }
-
-                    Result.failure(Exception(errorMessage, e))
+                    Result.failure(e)
                 }
             }
+
+    private fun parseError(errorJson: String): String {
+        return try {
+            val obj = JSONObject(errorJson)
+            val error = obj.optJSONObject("error")
+            error?.optString("message") ?: "Unknown API Error"
+        } catch (e: Exception) {
+            "Error parsing API response: ${e.message}"
+        }
+    }
 }

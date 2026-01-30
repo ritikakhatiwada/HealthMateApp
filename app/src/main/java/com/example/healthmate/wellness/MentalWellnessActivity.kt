@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,8 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.healthmate.data.FirestoreHelper
 import com.example.healthmate.model.WellnessResource
+import com.example.healthmate.ui.components.HealthMateTopBar
+import com.example.healthmate.ui.theme.HealthMateShapes
+import com.example.healthmate.ui.theme.Spacing
 import com.example.healthmate.ui.theme.HealthMateTheme
-import com.example.healthmate.ui.theme.Purple40
 import kotlinx.coroutines.launch
 
 class MentalWellnessActivity : ComponentActivity() {
@@ -65,7 +69,7 @@ fun MentalWellnessScreen() {
                             Text(
                                     text = "Helpline: ${resource.helplineNumber}",
                                     fontWeight = FontWeight.Bold,
-                                    color = Purple40
+                                    color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -96,17 +100,10 @@ fun MentalWellnessScreen() {
 
     Scaffold(
             topBar = {
-                TopAppBar(
-                        title = { Text("Mental Wellness", color = Color.White) },
-                        navigationIcon = {
-                            IconButton(onClick = { (context as? ComponentActivity)?.finish() }) {
-                                Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
-                            }
-                        },
-                        colors =
-                                TopAppBarDefaults.topAppBarColors(
-                                        containerColor = Color(0xFF9C27B0)
-                                )
+                HealthMateTopBar(
+                        title = "Mental Wellness",
+                        navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                        onNavigationClick = { (context as? ComponentActivity)?.finish() }
                 )
             }
     ) { padding ->
@@ -115,7 +112,7 @@ fun MentalWellnessScreen() {
                 isLoading -> {
                     CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center),
-                            color = Color(0xFF9C27B0)
+                            color = MaterialTheme.colorScheme.primary
                     )
                 }
                 resources.isEmpty() -> {
@@ -127,18 +124,22 @@ fun MentalWellnessScreen() {
                         Icon(
                                 imageVector = Icons.Default.Psychology,
                                 contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = Color.Gray
+                                modifier = Modifier.size(80.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "No resources available", fontSize = 18.sp, color = Color.Gray)
+                        Spacer(modifier = Modifier.height(Spacing.lg))
+                        Text(
+                                text = "No resources available",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
                 else -> {
                     LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            contentPadding = PaddingValues(Spacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
                         items(resources) { resource ->
                             WellnessResourceCard(resource = resource) {
@@ -158,38 +159,51 @@ fun WellnessResourceCard(resource: WellnessResource, onClick: () -> Unit) {
 
     Card(
             modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-            shape = RoundedCornerShape(12.dp),
+            shape = HealthMateShapes.CardLarge,
             colors =
                     CardDefaults.cardColors(
-                            containerColor = if (isHelpline) Color(0xFFFCE4EC) else Color.White
+                            containerColor =
+                                    if (isHelpline)
+                                            MaterialTheme.colorScheme.errorContainer.copy(
+                                                    alpha = 0.1f
+                                            )
+                                    else MaterialTheme.colorScheme.surface
                     ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                    imageVector = if (isHelpline) Icons.Default.Phone else Icons.Default.Article,
+                    imageVector = if (isHelpline) Icons.Default.Phone else Icons.AutoMirrored.Filled.Article,
                     contentDescription = null,
                     modifier = Modifier.size(40.dp),
-                    tint = if (isHelpline) Color(0xFFE91E63) else Color(0xFF9C27B0)
+                    tint =
+                            if (isHelpline) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Spacing.md))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = resource.title, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                        text = resource.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                )
                 Text(
                         text =
                                 if (isHelpline) resource.helplineNumber
                                 else resource.content.take(50) + "...",
-                        fontSize = 14.sp,
-                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2
                 )
                 Text(
                         text = resource.type,
-                        fontSize = 12.sp,
-                        color = if (isHelpline) Color(0xFFE91E63) else Color(0xFF9C27B0)
+                        style = MaterialTheme.typography.labelMedium,
+                        color =
+                                if (isHelpline) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.primary
                 )
             }
         }
